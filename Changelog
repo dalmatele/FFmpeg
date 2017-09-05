@@ -35,6 +35,7 @@ version <next>:
 - pseudocolor video filter
 - raw G.726 muxer and demuxer, left- and right-justified
 - NewTek NDI input/output device
+- Addition of Rockchip MPP hardware decoding
 
 version 3.3:
 - CrystalHD decoder moved to new decode API
