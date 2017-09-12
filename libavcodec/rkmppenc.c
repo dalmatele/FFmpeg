@@ -9,6 +9,7 @@
 #include "rockchip/mpp_buffer.h"
 #include "rockchip/mpp_frame.h"
 #include "rockchip/mpp_packet.h"
+#incluce "rockchip/mpp_mem.h"
 
 const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
     AV_PIX_FMT_NV21,
@@ -80,15 +81,12 @@ typedef struct {
     RK_S32 qp_init;
 } MpiEncData;
 
-MppPacket packet;
-
 /**
  * Init something before starting
  * @param avctx
  * @return 
  */
 static av_cold int encode_init(AVCodecContext *avctx){
-    packet = NULL;
     MpiEncData *p = avctx->priv_data;//hold data for global using
     MPP_RET ret = MPP_NOK;
     p = mpp_calloc(MpiEncData, 1);
