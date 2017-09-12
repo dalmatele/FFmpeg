@@ -103,6 +103,57 @@ static MppFrameFormat get_frame_format(AVCodecContext *avctx){
     }
 }
 
+static MPP_RET mpp_deinit(MpiEncData *p)
+{
+    if (p->ctx) {
+        mpp_destroy(p->ctx);
+        p->ctx = NULL;
+    }
+
+    return MPP_OK;
+}
+
+static MPP_RET res_deinit(MpiEncData *p)
+{
+    RK_U32 i;
+
+    mpp_assert(p);
+
+    for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
+        if (p->frm_buf[i]) {
+            mpp_buffer_put(p->frm_buf[i]);
+            p->frm_buf[i] = NULL;
+        }
+
+        if (p->pkt_buf[i]) {
+            mpp_buffer_put(p->pkt_buf[i]);
+            p->pkt_buf[i] = NULL;
+        }
+
+        if (p->md_buf[i]) {
+            mpp_buffer_put(p->md_buf[i]);
+            p->md_buf[i] = NULL;
+        }
+
+        if (p->osd_idx_buf[i]) {
+            mpp_buffer_put(p->osd_idx_buf[i]);
+            p->osd_idx_buf[i] = NULL;
+        }
+    }
+
+    if (p->frm_grp) {
+        mpp_buffer_group_put(p->frm_grp);
+        p->frm_grp = NULL;
+    }
+
+    if (p->pkt_grp) {
+        mpp_buffer_group_put(p->pkt_grp);
+        p->pkt_grp = NULL;
+    }
+
+    return MPP_OK;
+}
+
 /**
  * Init something before starting
  * @param avctx
@@ -173,11 +224,8 @@ static av_cold int encode_init(AVCodecContext *avctx){
         return ret;
 }
 
-static int get_format(AVCodec format){
-    
-}
-
 static av_cold int encode_close(AVCodecContext *avctx){
+    MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
     if (p->frame) {
         mpp_frame_deinit(&p->frame);
@@ -192,56 +240,6 @@ static av_cold int encode_close(AVCodecContext *avctx){
         res_deinit(p);
 }
 
-static MPP_RET mpp_deinit(MpiEncData *p)
-{
-    if (p->ctx) {
-        mpp_destroy(p->ctx);
-        p->ctx = NULL;
-    }
-
-    return MPP_OK;
-}
-
-static MPP_RET res_deinit(MpiEncData *p)
-{
-    RK_U32 i;
-
-    mpp_assert(p);
-
-    for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
-        if (p->frm_buf[i]) {
-            mpp_buffer_put(p->frm_buf[i]);
-            p->frm_buf[i] = NULL;
-        }
-
-        if (p->pkt_buf[i]) {
-            mpp_buffer_put(p->pkt_buf[i]);
-            p->pkt_buf[i] = NULL;
-        }
-
-        if (p->md_buf[i]) {
-            mpp_buffer_put(p->md_buf[i]);
-            p->md_buf[i] = NULL;
-        }
-
-        if (p->osd_idx_buf[i]) {
-            mpp_buffer_put(p->osd_idx_buf[i]);
-            p->osd_idx_buf[i] = NULL;
-        }
-    }
-
-    if (p->frm_grp) {
-        mpp_buffer_group_put(p->frm_grp);
-        p->frm_grp = NULL;
-    }
-
-    if (p->pkt_grp) {
-        mpp_buffer_group_put(p->pkt_grp);
-        p->pkt_grp = NULL;
-    }
-
-    return MPP_OK;
-}
 
 
 
