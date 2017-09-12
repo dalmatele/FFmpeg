@@ -92,8 +92,8 @@ static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
     }
 }
 
-static MppFrameFormat get_frame_format(AVPixelFormat *avcodec){
-    switch(*avcodec){
+static MppFrameFormat get_frame_format(AVCodecContext *avctx){
+    switch(avctx->codec->pix_fmts){
         case AV_PIX_FMT_NV21:
             return MPP_FMT_YUV420SP;
         case AV_PIX_FMT_YUV420P:
@@ -119,7 +119,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->height = avctx->height;
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
-    p->fmt          = get_frame_format(avctx->codec->pix_fmts);
+    p->fmt          = get_frame_format(avctx);
     p->type         = ffrkmpp_get_codingtype(avctx);
     p->num_frames   = avctx->frame_number;
     p->frame_size   = p->hor_stride * p->ver_stride * 3 / 2;
