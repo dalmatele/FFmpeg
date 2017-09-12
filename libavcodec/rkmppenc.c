@@ -11,6 +11,7 @@
 #include "rockchip/mpp_packet.h"
 #include "rockchip/mpp_mem.h"
 #include "rockchip/mpp_common.h"
+#include "rockchip/mpp_log.h"
 
 const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
     AV_PIX_FMT_NV21,
