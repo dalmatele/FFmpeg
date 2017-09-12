@@ -109,6 +109,7 @@ static MppFrameFormat get_frame_format(AVCodecContext *avctx){
  * @return 
  */
 static av_cold int encode_init(AVCodecContext *avctx){
+    int i;
     MpiEncData *p = avctx->priv_data;//hold data for global using
     MPP_RET ret = MPP_NOK;
     p = mpp_calloc(MpiEncData, 1);
