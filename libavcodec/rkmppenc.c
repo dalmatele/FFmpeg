@@ -221,8 +221,10 @@ static av_cold int encode_init(AVCodecContext *avctx){
     }
 
     ret = mpp_init(p->ctx, MPP_CTX_ENC, p->type);
-    if (ret)
+    if (ret){
         return ret;
+    }
+    return 0;
 }
 
 static av_cold int encode_close(AVCodecContext *avctx){
@@ -236,9 +238,11 @@ static av_cold int encode_close(AVCodecContext *avctx){
     if (ret) {        
         goto MPP_TEST_OUT;
     }
+    return 0;
     MPP_TEST_OUT:
         mpp_deinit(p);
         res_deinit(p);
+        return ret;
 }
 
 
@@ -332,6 +336,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             return ret;
         }
     }
+    return 0;
 }
 
 
