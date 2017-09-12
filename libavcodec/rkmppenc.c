@@ -92,7 +92,7 @@ static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
     }
 }
 
-static MppFrameFormat get_frame_format(AVCodec *avcodec){
+static MppFrameFormat get_frame_format(AVPixelFormat *avcodec){
     switch(*avcodec){
         case AV_PIX_FMT_NV21:
             return MPP_FMT_YUV420SP;
