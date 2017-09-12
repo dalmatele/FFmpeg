@@ -10,6 +10,7 @@
 #include "rockchip/mpp_frame.h"
 #include "rockchip/mpp_packet.h"
 #incluce "rockchip/mpp_mem.h"
+#include "rockchip/mpp_common.h"
 
 const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
     AV_PIX_FMT_NV21,
@@ -80,6 +81,16 @@ typedef struct {
     RK_S32 qp_step;
     RK_S32 qp_init;
 } MpiEncData;
+
+static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
+{
+    switch (avctx->codec_id) {
+    case AV_CODEC_ID_H264:  return MPP_VIDEO_CodingAVC;
+    case AV_CODEC_ID_HEVC:  return MPP_VIDEO_CodingHEVC;
+    case AV_CODEC_ID_VP8:   return MPP_VIDEO_CodingVP8;
+    default:                return MPP_VIDEO_CodingUnused;
+    }
+}
 
 /**
  * Init something before starting
@@ -220,15 +231,7 @@ static MPP_RET res_deinit(MpiEncData *p)
     return MPP_OK;
 }
 
-static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
-{
-    switch (avctx->codec_id) {
-    case AV_CODEC_ID_H264:  return MPP_VIDEO_CodingAVC;
-    case AV_CODEC_ID_HEVC:  return MPP_VIDEO_CodingHEVC;
-    case AV_CODEC_ID_VP8:   return MPP_VIDEO_CodingVP8;
-    default:                return MPP_VIDEO_CodingUnused;
-    }
-}
+
 
 /**
  * Encode data
