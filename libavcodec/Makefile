@@ -336,6 +336,7 @@ OBJS-$(CONFIG_H264_OMX_ENCODER)        += omx.o
 OBJS-$(CONFIG_H264_QSV_DECODER)        += qsvdec_h2645.o
 OBJS-$(CONFIG_H264_QSV_ENCODER)        += qsvenc_h264.o
 OBJS-$(CONFIG_H264_RKMPP_DECODER)      += rkmppdec.o
+OBJS-$(CONFIG_H264_RKMPP_ENCODER)      += rkmppenc.o
 OBJS-$(CONFIG_H264_VAAPI_ENCODER)      += vaapi_encode_h264.o vaapi_encode_h26x.o
 OBJS-$(CONFIG_H264_VIDEOTOOLBOX_ENCODER) += videotoolboxenc.o
 OBJS-$(CONFIG_HAP_DECODER)             += hapdec.o hap.o
