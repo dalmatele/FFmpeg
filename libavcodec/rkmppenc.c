@@ -9,7 +9,7 @@
 #include "rockchip/mpp_buffer.h"
 #include "rockchip/mpp_frame.h"
 #include "rockchip/mpp_packet.h"
-#incluce "rockchip/mpp_mem.h"
+#include "rockchip/mpp_mem.h"
 #include "rockchip/mpp_common.h"
 
 const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
