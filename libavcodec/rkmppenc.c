@@ -155,6 +155,31 @@ static MPP_RET res_deinit(MpiEncData *p)
     return MPP_OK;
 }
 
+static MPP_RET mpi_enc_gen_osd_data(MppEncOSDData *osd_data, MppBuffer osd_buf, RK_U32 frame_cnt)
+{
+    RK_U32 k = 0, buf_size = 0;
+    RK_U8 data = 0;
+
+    osd_data->num_region = 8;
+    osd_data->buf = osd_buf;
+    for (k = 0; k < osd_data->num_region; k++) {
+        osd_data->region[k].enable = 1;
+        osd_data->region[k].inverse = frame_cnt & 1;
+        osd_data->region[k].start_mb_x = k * 3;
+        osd_data->region[k].start_mb_y = k * 2;
+        osd_data->region[k].num_mb_x = 2;
+        osd_data->region[k].num_mb_y = 2;
+
+        buf_size = osd_data->region[k].num_mb_x * osd_data->region[k].num_mb_y * 256;
+        osd_data->region[k].buf_offset = k * buf_size;
+
+        data = k;
+        memset((RK_U8 *)mpp_buffer_get_ptr(osd_data->buf) + osd_data->region[k].buf_offset, data, buf_size);
+    }
+
+    return MPP_OK;
+}
+
 /**
  * Init something before starting
  * @param avctx
