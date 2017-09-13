@@ -367,7 +367,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 }
 
 
-AVCodec ff_h264_rockchip1_encoder = {
+AVCodec ff_h264_rkmpp_encoder = {
     .name = "h264_rockchip", // <-- nothing
     .long_name = "RKMPP chiprock encoder",
     .type = AVMEDIA_TYPE_VIDEO,
