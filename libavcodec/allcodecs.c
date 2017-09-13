@@ -220,7 +220,8 @@ static void register_all(void)
     REGISTER_DECODER(H264_QSV,          h264_qsv);
 //    REGISTER_DECODER(H264_RKMPP,        h264_rkmpp);
     REGISTER_DECODER(H264_VDA,          h264_vda);
-    REGISTER_ENCDEC(H264_RKMPP,         h264_rkmpp);//if using ENCDEC (encode & decode), we must have encode and decode function
+    //if using ENCDEC (encode & decode), we must have encode and decode function
+    REGISTER_ENCDEC(H264_RKMPP,         h264_rkmpp);
 #if FF_API_VDPAU
     REGISTER_DECODER(H264_VDPAU,        h264_vdpau);
 #endif
