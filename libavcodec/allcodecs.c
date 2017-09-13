@@ -222,7 +222,8 @@ static void register_all(void)
     REGISTER_DECODER(H264_VDA,          h264_vda);
     //if using ENCDEC (encode & decode), we must have encode and decode function
 //    REGISTER_ENCODER(H264_ROCKCHIP,         h264_rkmpp);ok
-    REGISTER_ENCDEC(H264_RKMPP, h264_rkmp);
+    //it find config from make file
+    REGISTER_ENCDEC(H264_RKMPP, h264_rkmpp);
 #if FF_API_VDPAU
     REGISTER_DECODER(H264_VDPAU,        h264_vdpau);
 #endif
