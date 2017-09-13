@@ -2,7 +2,6 @@
  * https://users.cs.cf.ac.uk/Dave.Marshall/C/node10.html
  */
 
-#include "rkmppenc.h"
 #include "avcodec.h"
 #include "internal.h"
 #include "rockchip/rk_type.h"
