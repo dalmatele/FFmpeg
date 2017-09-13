@@ -3,6 +3,8 @@
  */
 
 #include "rkmppenc.h"
+#include "avcodec.h"
+#include "internal.h"
 #include "rockchip/rk_type.h"
 #include "rockchip/rk_mpi.h"
 #include "rockchip/rk_mpi_cmd.h"
@@ -287,6 +289,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppPacket packet = NULL;
     MppApi *mpi;
     MppCtx ctx;
+    //encode packet
+    MppTask task = NULL;
     MpiEncData *p = avctx->priv_data;
     mpi = p->mpi;
     ctx = p->ctx;
@@ -301,8 +305,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_frame_set_ver_stride(p->frame, p->ver_stride);
     mpp_frame_set_fmt(p->frame, p->fmt);
     
-    //encode packet
-    MppTask task = NULL;
+    
     MppBuffer frm_buf_in  = p->frm_buf[0];
     MppBuffer pkt_buf_out = p->pkt_buf[0];
     MppBuffer md_info_buf = p->md_buf[0];
