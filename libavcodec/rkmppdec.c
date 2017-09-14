@@ -497,6 +497,7 @@ static void ffrkmpp_flush(AVCodecContext *avctx)
         av_log(avctx, AV_LOG_ERROR, "Failed to reset MPI (code = %d)\n", ret);
 }
 
+
 #define FFRKMPP_DEC_HWACCEL(NAME, ID) \
   AVHWAccel ff_##NAME##_rkmpp_hwaccel = { \
       .name     = #NAME "_rkmpp", \
@@ -531,6 +532,8 @@ static void ffrkmpp_flush(AVCodecContext *avctx)
                                                          AV_PIX_FMT_NONE}, \
         .bsfs           = #BSFS, \
     };
+
+
 
 FFRKMPP_DEC(h264, AV_CODEC_ID_H264, h264_mp4toannexb)
 FFRKMPP_DEC(hevc, AV_CODEC_ID_HEVC, hevc_mp4toannexb)

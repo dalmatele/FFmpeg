@@ -16,7 +16,8 @@
 
 const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
     AV_PIX_FMT_NV21,
-    AV_PIX_FMT_YUV420P
+    AV_PIX_FMT_YUV420P,
+    AV_PIX_FMT_NONE //must have this to terminate
 };
 
 #define MPI_ENC_IO_COUNT            (1)//one frame each time
