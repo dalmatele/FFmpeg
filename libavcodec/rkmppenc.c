@@ -227,6 +227,7 @@ static MPP_RET mpi_enc_gen_osd_plt(MppEncOSDPlt *osd_plt, RK_U32 *table)
 
 static MPP_RET mpi_init(AVCodecContext *avctx){
     MPP_RET ret = MPP_NOK;
+    MpiEncData *p = avctx->priv_data;
     ret = mpp_create(&p->ctx, &p->mpi);
     if (ret) {
         return ret;
