@@ -239,7 +239,7 @@ static MPP_RET mpi_init(AVCodecContext *avctx){
     }
     return MPP_OK;
 }
-static MPP_RET mpp_init(AVCodecContext *avctx){
+static int mpp_init(AVCodecContext *avctx){
     MpiEncData *p = avctx->priv_data;
     MppApi *mpi;
     MppCtx ctx;
