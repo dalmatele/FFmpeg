@@ -214,6 +214,17 @@ static int res_init(AVCodecContext *avctx){
     }
     return 0;
 }
+
+static MPP_RET mpi_enc_gen_osd_plt(MppEncOSDPlt *osd_plt, RK_U32 *table)
+{
+    RK_U32 k = 0;
+    if (osd_plt->buf) {
+        for (k = 0; k < 256; k++)
+            osd_plt->buf[k] = table[k % 8];
+    }
+    return MPP_OK;
+}
+
 static int mpi_init(AVCodecContext *avctx){
     MPP_RET ret = MPP_NOK;
     ret = mpp_create(&p->ctx, &p->mpi);
