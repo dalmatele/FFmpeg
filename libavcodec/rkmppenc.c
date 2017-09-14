@@ -13,6 +13,7 @@
 #include "rockchip/mpp_mem.h"
 #include "rockchip/mpp_common.h"
 #include "rockchip/mpp_log.h"
+#include "rockchip/mpp_err.h"
 
 //allocate mem --> mpi init --> mpp init --> configure some params --> encode
 
@@ -225,21 +226,12 @@ static MPP_RET mpi_enc_gen_osd_plt(MppEncOSDPlt *osd_plt, RK_U32 *table)
     return MPP_OK;
 }
 
-static MPP_RET mpi_init(AVCodecContext *avctx){
-    MPP_RET ret = MPP_NOK;
-    MpiEncData *p = avctx->priv_data;
-    ret = mpp_create(&p->ctx, &p->mpi);
-    if (ret) {
-        return ret;
-    }
-
-    ret = mpp_init(p->ctx, MPP_CTX_ENC, p->type);
-    if (ret){
-        return ret;
-    }
-    return MPP_OK;
-}
-static int mpp_init(AVCodecContext *avctx){
+/**
+ * 
+ * @param avctx
+ * @return 
+ */
+static MPP_RET init_mpp(AVCodecContext *avctx){
     MpiEncData *p = avctx->priv_data;
     MppApi *mpi;
     MppCtx ctx;
@@ -386,6 +378,22 @@ static int mpp_init(AVCodecContext *avctx){
     return MPP_OK;
 }
 
+static MPP_RET mpi_init(AVCodecContext *avctx){
+    MPP_RET ret = MPP_NOK;
+    MpiEncData *p = avctx->priv_data;
+    ret = mpp_create(&p->ctx, &p->mpi);
+    if (ret) {
+        return ret;
+    }
+
+    ret = mpp_init(p->ctx, MPP_CTX_ENC, p->type);
+    if (ret){
+        return ret;
+    }
+    return MPP_OK;
+}
+
+
 /**
  * ignore this, because FFMPEG helps us create file' headers
  * @param avctx
@@ -454,7 +462,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->plt_table[7] = MPP_ENC_OSD_PLT_BLACK;
     res_init(avctx);    
     mpi_init(avctx);
-    mpp_init(avctx);
+    init_mpp(avctx);
     return 0;
 }
 
