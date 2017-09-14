@@ -184,7 +184,7 @@ static MPP_RET mpi_enc_gen_osd_data(MppEncOSDData *osd_data, MppBuffer osd_buf, 
     return MPP_OK;
 }
 
-static int res_init(AVCodecContext *avctx){
+static MPP_RET res_init(AVCodecContext *avctx){
     int i;
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
@@ -212,7 +212,7 @@ static int res_init(AVCodecContext *avctx){
             return ret;
         }
     }
-    return 0;
+    return MPP_OK;
 }
 
 static MPP_RET mpi_enc_gen_osd_plt(MppEncOSDPlt *osd_plt, RK_U32 *table)
@@ -225,7 +225,7 @@ static MPP_RET mpi_enc_gen_osd_plt(MppEncOSDPlt *osd_plt, RK_U32 *table)
     return MPP_OK;
 }
 
-static int mpi_init(AVCodecContext *avctx){
+static MPP_RET mpi_init(AVCodecContext *avctx){
     MPP_RET ret = MPP_NOK;
     ret = mpp_create(&p->ctx, &p->mpi);
     if (ret) {
@@ -236,9 +236,9 @@ static int mpi_init(AVCodecContext *avctx){
     if (ret){
         return ret;
     }
-    return 0;
+    return MPP_OK;
 }
-static int mpp_init(AVCodecContext *avctx){
+static MPP_RET mpp_init(AVCodecContext *avctx){
     MpiEncData *p = avctx->priv_data;
     MppApi *mpi;
     MppCtx ctx;
@@ -382,7 +382,7 @@ static int mpp_init(AVCodecContext *avctx){
 
     /* gen and cfg osd plt */
     mpi_enc_gen_osd_plt(&p->osd_plt, p->plt_table);
-    return 0;
+    return MPP_OK;
 }
 
 /**
