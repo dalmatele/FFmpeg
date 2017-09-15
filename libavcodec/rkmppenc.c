@@ -438,7 +438,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     if(!p){
         return ret;
     }
-    av_log(avctx, AV_LOG_INFO, "ducla");
+    av_log(avctx, AV_LOG_INFO, "start initing rockchip\n");
     p->width = avctx->width;
     p->height = avctx->height;
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
@@ -465,6 +465,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     res_init(avctx);    
     mpi_init(avctx);
     init_mpp(avctx);
+    av_log(avctx, AV_LOG_INFO, "finish initing rockchip\n");
     return 0;
 }
 
