@@ -476,7 +476,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's mpi \n");
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpp \n");
     init_mpp(avctx);
-    av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's mpp \n");
+    
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip\n");
     return 0;
 }
@@ -542,6 +542,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     buf = frame->data;//get frame data
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     mpp_frame_set_eos(p->frame, p->frm_eos);
+    av_log(avctx, AV_LOG_INFO, "Init packet \n");
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
     if (ret) {
