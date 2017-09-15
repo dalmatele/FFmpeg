@@ -190,8 +190,9 @@ static MPP_RET res_init(AVCodecContext *avctx){
     int i;
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
+    mpp_assert(p);
     av_log(avctx, AV_LOG_INFO, "Get buffer for frm_grp \n");
-    ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);
+    ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);//<-- error in here
     av_log(avctx, AV_LOG_INFO, "Can not get buffer for frm_grp (code = %d)\n", ret);
     av_log(avctx, AV_LOG_INFO, "Get buffer for pkt_grp \n");
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
