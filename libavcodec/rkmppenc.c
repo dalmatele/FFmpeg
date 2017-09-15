@@ -438,7 +438,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     if(!p){
         return ret;
     }
-    av_log(avctc, AV_LOG_INFO, "ducla");
+    av_log(avctx, AV_LOG_INFO, "ducla");
     p->width = avctx->width;
     p->height = avctx->height;
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
