@@ -190,8 +190,11 @@ static MPP_RET res_init(AVCodecContext *avctx){
     int i;
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
+    av_log(avctx, AV_LOG_INFO, "Get buffer for frm_grp \n");
     mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);
+    av_log(avctx, AV_LOG_INFO, "Get buffer for pkt_grp \n");
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
+    av_log(avctx, AV_LOG_INFO, "Get buffer for other components \n");
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
