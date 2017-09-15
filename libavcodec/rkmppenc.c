@@ -186,10 +186,10 @@ static MPP_RET mpi_enc_gen_osd_data(MppEncOSDData *osd_data, MppBuffer osd_buf, 
     return MPP_OK;
 }
 
-static MPP_RET res_init(AVCodecContext *avctx){
+static MPP_RET res_init(MpiEncData *p){
     int i;
     MPP_RET ret = MPP_NOK;
-    MpiEncData *p = avctx->priv_data;
+//    MpiEncData *p = avctx->priv_data;
     mpp_assert(p);
     av_log(avctx, AV_LOG_INFO, "Get buffer for frm_grp %d\n", p->num_frames);
     ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);//<-- error in here
