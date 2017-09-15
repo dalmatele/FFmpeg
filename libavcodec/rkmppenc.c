@@ -14,7 +14,7 @@
 #include "rockchip/mpp_common.h"
 #include "rockchip/mpp_log.h"
 #include "rockchip/mpp_err.h"
-#include "tableprint_vlc.h"
+#include "libavutil/log.h"
 
 //allocate mem --> mpi init --> mpp init --> configure some params --> encode
 
