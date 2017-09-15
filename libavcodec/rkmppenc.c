@@ -14,6 +14,7 @@
 #include "rockchip/mpp_common.h"
 #include "rockchip/mpp_log.h"
 #include "rockchip/mpp_err.h"
+#include "tableprint_vlc.h"
 
 //allocate mem --> mpi init --> mpp init --> configure some params --> encode
 
@@ -437,6 +438,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     if(!p){
         return ret;
     }
+    av_log(avctc, AV_LOG_INFO, "ducla");
     p->width = avctx->width;
     p->height = avctx->height;
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
