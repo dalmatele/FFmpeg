@@ -186,7 +186,7 @@ static MPP_RET mpi_enc_gen_osd_data(MppEncOSDData *osd_data, MppBuffer osd_buf, 
     return MPP_OK;
 }
 
-static MPP_RET res_init(MpiEncData *p){
+static MPP_RET res_init(AVCodecContext *avctx, MpiEncData *p){
     int i;
     MPP_RET ret = MPP_NOK;
 //    MpiEncData *p = avctx->priv_data;
@@ -469,7 +469,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->plt_table[7] = MPP_ENC_OSD_PLT_BLACK;
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's resources %d\n", p->num_frames);
     mpp_assert(p);
-    res_init(avctx);
+    res_init(avctx, p);
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's resources \n");
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpi \n");    
     mpi_init(avctx);
