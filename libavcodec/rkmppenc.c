@@ -186,7 +186,7 @@ static MPP_RET mpi_enc_gen_osd_data(MppEncOSDData *osd_data, MppBuffer osd_buf, 
     return MPP_OK;
 }
 
-static MPP_RET res_init(AVCodecContext *avctx, MpiEncData *p){
+static MPP_RET res_init(AVCodecContext *avctx){
     int i;
     MPP_RET ret = MPP_NOK;
 //    MpiEncData *p = avctx->priv_data;
@@ -469,7 +469,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->plt_table[7] = MPP_ENC_OSD_PLT_BLACK;
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's resources %d\n", p->num_frames);
     mpp_assert(p);
-    res_init(avctx, p);
+    res_init(avctx);
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's resources \n");
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpi \n");    
     mpi_init(avctx);
@@ -603,5 +603,6 @@ AVCodec ff_h264_rkmpp_encoder = {
     .pix_fmts = ff_rkmpp_pix_fmts,
     .init = encode_init,
     .close = encode_close,
-    .encode2 = encode_frame
+    .encode2 = encode_frame,
+    .priv_data_size = sizeof(MpiEncData),//size of private data, if not use we can not cast priv_data to our pointer
 };
