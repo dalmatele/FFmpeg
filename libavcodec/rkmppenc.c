@@ -438,7 +438,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     if(!p){
         return ret;
     }
-    av_log(avctx, AV_LOG_INFO, "start initing rockchip\n");
+    av_log(avctx, AV_LOG_INFO, "Start initing rockchip\n");
     p->width = avctx->width;
     p->height = avctx->height;
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
@@ -462,10 +462,16 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->plt_table[5] = MPP_ENC_OSD_PLT_RED;
     p->plt_table[6] = MPP_ENC_OSD_PLT_BLUE;
     p->plt_table[7] = MPP_ENC_OSD_PLT_BLACK;
-    res_init(avctx);    
+    av_log(avctx, AV_LOG_INFO, "Start initing rockchip's resources \n");
+    res_init(avctx);
+    av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's resources \n");
+    av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpi \n");    
     mpi_init(avctx);
+    av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's mpi \n");
+    av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpp \n");
     init_mpp(avctx);
-    av_log(avctx, AV_LOG_INFO, "finish initing rockchip\n");
+    av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's mpp \n");
+    av_log(avctx, AV_LOG_INFO, "Finish initing rockchip\n");
     return 0;
 }
 
