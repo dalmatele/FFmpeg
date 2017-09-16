@@ -67,7 +67,6 @@ typedef struct {
     RK_U32 ver_stride;
     MppFrameFormat fmt;
     MppCodingType type;
-    RK_U32 num_frames;
 
     // resources
     size_t frame_size;
@@ -191,7 +190,7 @@ static MPP_RET res_init(AVCodecContext *avctx){
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
     mpp_assert(p);
-    av_log(avctx, AV_LOG_INFO, "Get buffer for frm_grp %d\n", p->num_frames);
+    av_log(avctx, AV_LOG_INFO, "ducla: hor_stride  %d\n", p->hor_stride);
     ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);
     av_log(avctx, AV_LOG_INFO, "Get buffer for pkt_grp \n");
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
@@ -455,10 +454,10 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
     p->fmt          = get_frame_format(avctx);
     p->type         = ffrkmpp_get_codingtype(avctx);
-    p->num_frames   = avctx->frame_number;
+//    p->num_frames   = avctx->frame_number;
     
     p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;
-    av_log(avctx, AV_LOG_INFO, "dimensions: %d - num frames: %d\n", p->frame_size, p->num_frames);
+    av_log(avctx, AV_LOG_INFO, "dimensions: %d - num frames: %d\n", p->frame_size);
     p->packet_size  = p->width * p->height;
     p->mdinfo_size  = (((p->hor_stride + 255) & (~255)) / 16) * (p->ver_stride / 16) * 4;
     /*
@@ -474,7 +473,6 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->plt_table[5] = MPP_ENC_OSD_PLT_RED;
     p->plt_table[6] = MPP_ENC_OSD_PLT_BLUE;
     p->plt_table[7] = MPP_ENC_OSD_PLT_BLACK;
-    av_log(avctx, AV_LOG_INFO, "Start initing rockchip's resources %d\n", p->num_frames);
     res_init(avctx);
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's resources \n");
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpi \n");    
