@@ -189,7 +189,6 @@ static MPP_RET res_init(AVCodecContext *avctx){
     int i;
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
-    mpp_assert(p);
     av_log(avctx, AV_LOG_INFO, "ducla: hor_stride  %d\n", p->hor_stride);
     ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);
     av_log(avctx, AV_LOG_INFO, "Get buffer for pkt_grp \n");
@@ -441,7 +440,7 @@ static int prepare(AVCodecContext *avctx){
 static av_cold int encode_init(AVCodecContext *avctx){
     MpiEncData *p = avctx->priv_data;//hold data for global using
     MPP_RET ret = MPP_NOK;
-    p = mpp_calloc(MpiEncData, 1);
+//    p = mpp_calloc(MpiEncData, 1);
     if(!p){
         return ret;
     }
