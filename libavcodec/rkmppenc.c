@@ -514,7 +514,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     ctx = p->ctx;
     //get frame
     ret = mpp_frame_init(&p->frame);
-    av_log(avctx, AV_LOG_ERROR, "mpp frame init result %d", ret);
+//    av_log(avctx, AV_LOG_ERROR, "mpp frame init result %d", ret);
     mpp_frame_set_width(p->frame, p->width);
     mpp_frame_set_height(p->frame, p->height);
     mpp_frame_set_hor_stride(p->frame, p->hor_stride);
@@ -537,7 +537,9 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
 //    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
-//    av_log(avctx, AV_LOG_ERROR, "mpi dequeue result %d\n", ret);
+    if(task == NULL){
+        av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d task %p\n", ret, task);
+    }
     ret = mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
 //    av_log(avctx, AV_LOG_ERROR, "met set frame result %d\n", ret);
     ret = mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
@@ -553,6 +555,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
 //    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d\n", ret);
     if (task) {//<--wait here, maybe we need to reprocess packet's data
+        av_log(avctx, AV_LOG_ERROR, "We have task\n");
         MppFrame packet_out = NULL;
         ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
         mpp_assert(packet_out == packet);
