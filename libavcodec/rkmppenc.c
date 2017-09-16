@@ -297,9 +297,7 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     rc_cfg->gop              = p->gop;
     rc_cfg->skip_cnt         = 0;
     ret = mpi->control(ctx, MPP_ENC_SET_RC_CFG, rc_cfg);
-    if (ret) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "rc conig result %d\n", ret);
     codec_cfg->coding = p->type;
     switch (codec_cfg->coding) {
     case MPP_VIDEO_CodingAVC : {
@@ -364,16 +362,12 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     } break;
     }
     ret = mpi->control(ctx, MPP_ENC_SET_CODEC_CFG, codec_cfg);
-    if (ret) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "codec conig result %d\n", ret);
 
     /* optional */
     p->sei_mode = MPP_ENC_SEI_MODE_ONE_FRAME;
     ret = mpi->control(ctx, MPP_ENC_SET_SEI_CFG, &p->sei_mode);
-    if (ret) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "sei mode result %d\n", ret);
 
     /* gen and cfg osd plt */
     mpi_enc_gen_osd_plt(&p->osd_plt, p->plt_table);
