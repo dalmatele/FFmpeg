@@ -535,7 +535,10 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
-//    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
+    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
+    if(ctx == NULL){
+        av_log(avctx, AV_LOG_ERROR, "context is null \n");
+    }
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
     if(task == NULL){
         av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d task %p\n", ret, task);
