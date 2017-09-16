@@ -200,23 +200,25 @@ static MPP_RET res_init(AVCodecContext *avctx){
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
+        av_log(avctx, AV_LOG_INFO, "1-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
 
         ret = mpp_buffer_get(p->frm_grp, &p->osd_idx_buf[i], p->osd_idx_size);
-        
+        av_log(avctx, AV_LOG_INFO, "2-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
 
         ret = mpp_buffer_get(p->pkt_grp, &p->pkt_buf[i], p->packet_size);
-        av_log(avctx, AV_LOG_INFO, "failed to get buffer for input frame ret %d\n", ret);
+        av_log(avctx, AV_LOG_INFO, "3-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
 
         ret = mpp_buffer_get(p->pkt_grp, &p->md_buf[i], p->mdinfo_size);
+        av_log(avctx, AV_LOG_INFO, "4-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
