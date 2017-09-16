@@ -534,22 +534,26 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
-    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d", ret);
+    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
-    av_log(avctx, AV_LOG_ERROR, "mpi dequeue result %d", ret);
-    mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
-    mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
-    mpp_task_meta_set_buffer(task, KEY_MOTION_INFO, md_info_buf);
-    mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
+    av_log(avctx, AV_LOG_ERROR, "mpi dequeue result %d\n", ret);
+    ret = mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
+    av_log(avctx, AV_LOG_ERROR, "met set frame result %d\n", ret);
+    ret = mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
+    av_log(avctx, AV_LOG_ERROR, "meta set packet result %d\n", ret);
+    ret = mpp_task_meta_set_buffer(task, KEY_MOTION_INFO, md_info_buf);
+    av_log(avctx, AV_LOG_ERROR, "meta set buffer result %d\n", ret);
+    ret= mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
+    av_log(avctx, AV_LOG_ERROR, "gen osd result %d\n", ret);
     ret = mpi->enqueue(ctx, MPP_PORT_INPUT, task);
-    av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d", ret);
+    av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d\n", ret);
     ret = mpi->poll(ctx, MPP_PORT_OUTPUT, MPP_POLL_BLOCK);
-    av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d", ret);
+    av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
-    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d", ret);
+    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d\n", ret);
     if (task) {
         MppFrame packet_out = NULL;
-        mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
+        ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
         mpp_assert(packet_out == packet);
         if (packet) {
             void *ptr   = mpp_packet_get_pos(packet);
@@ -567,7 +571,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             *got_packet = 0;
         }
         ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
-        av_log(avctx, AV_LOG_ERROR, "mpi enqueue2 result %d", ret);
+        av_log(avctx, AV_LOG_ERROR, "mpi enqueue2 result %d\n", ret);
     }
     return 0;
 }
