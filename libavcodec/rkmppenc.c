@@ -258,7 +258,7 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     prep_cfg->ver_stride    = p->ver_stride;
     prep_cfg->format        = p->fmt;
     prep_cfg->rotation      = MPP_ENC_ROT_0;
-    av_log(avctx, AV_LOG_ERROR, "mpi control init\n", ret);
+    av_log(avctx, AV_LOG_ERROR, "mpi control init %p\n", prep_cfg);
     ret = mpi->control(ctx, MPP_ENC_SET_PREP_CFG, prep_cfg);
     av_log(avctx, AV_LOG_ERROR, "mpi control finish %d\n", ret);
     if (ret) {
@@ -536,9 +536,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
     av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
-    if(ctx == NULL){
-        av_log(avctx, AV_LOG_ERROR, "context is null \n");
-    }
+    
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
     if(task == NULL){
         av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d task %p\n", ret, task);
