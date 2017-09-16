@@ -450,12 +450,13 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->height = avctx->height;
     
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
-    av_log(avctx, AV_LOG_INFO, "width %d\n", p->hor_stride);
+    
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
     p->fmt          = get_frame_format(avctx);
     p->type         = ffrkmpp_get_codingtype(avctx);
     p->num_frames   = avctx->frame_number;
-    p->frame_size   = p->hor_stride * p->ver_stride * 3 / 2;
+    av_log(avctx, AV_LOG_INFO, "dimensions: %d - %d\n",p->hor_stride,  p->hor_stride);
+    p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;
     p->packet_size  = p->width * p->height;
     p->mdinfo_size  = (((p->hor_stride + 255) & (~255)) / 16) * (p->ver_stride / 16) * 4;
     /*
