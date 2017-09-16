@@ -383,14 +383,15 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
 static MPP_RET mpi_init(AVCodecContext *avctx){
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
-    av_log(avctx, AV_LOG_ERROR, "init mpi\n");
+    av_log(avctx, AV_LOG_ERROR, "create mpi context\n");
     ret = mpp_create(&p->ctx, &p->mpi);
-    av_log(avctx, AV_LOG_ERROR, "Finish mpi init\n", ret);
+    av_log(avctx, AV_LOG_ERROR, "Finish mpi init context %d\n", ret);
     if (ret) {
         return ret;
     }
-
+    av_log(avctx, AV_LOG_ERROR, "create mpi\n");
     ret = mpp_init(p->ctx, MPP_CTX_ENC, p->type);
+    av_log(avctx, AV_LOG_ERROR, "finish creating mpi %d - %d\n", ret, p->type);
     if (ret){
         return ret;
     }
