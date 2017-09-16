@@ -513,9 +513,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     ctx = p->ctx;
     //get frame
     ret = mpp_frame_init(&p->frame);
-    if (ret) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "mpp frame init result %d", ret);
     mpp_frame_set_width(p->frame, p->width);
     mpp_frame_set_height(p->frame, p->height);
     mpp_frame_set_hor_stride(p->frame, p->hor_stride);
@@ -536,29 +534,19 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
-    if (ret) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
-    if (ret || NULL == task) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "mpi dequeue result %d", ret);
     mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
     mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
     mpp_task_meta_set_buffer(task, KEY_MOTION_INFO, md_info_buf);
     mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
     ret = mpi->enqueue(ctx, MPP_PORT_INPUT, task);
-    if (ret) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d", ret);
     ret = mpi->poll(ctx, MPP_PORT_OUTPUT, MPP_POLL_BLOCK);
-    if (ret) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
-    if (ret || NULL == task) {
-        return ret;
-    }
+    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d", ret);
     if (task) {
         MppFrame packet_out = NULL;
         mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
@@ -579,9 +567,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             *got_packet = 0;
         }
         ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
-        if (ret) {
-            return ret;
-        }
+        av_log(avctx, AV_LOG_ERROR, "mpi enqueue2 result %d", ret);
     }
     return 0;
 }
