@@ -189,33 +189,26 @@ static MPP_RET res_init(AVCodecContext *avctx){
     int i;
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
-    av_log(avctx, AV_LOG_INFO, "ducla: hor_stride  %d\n", p->hor_stride);
     ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);
-    av_log(avctx, AV_LOG_INFO, "Get buffer for pkt_grp \n");
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
-        av_log(avctx, AV_LOG_INFO, "ducla: frame size %d \n", p->frame_size);
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
-        av_log(avctx, AV_LOG_INFO, "1-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
 
         ret = mpp_buffer_get(p->frm_grp, &p->osd_idx_buf[i], p->osd_idx_size);
-        av_log(avctx, AV_LOG_INFO, "2-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
 
         ret = mpp_buffer_get(p->pkt_grp, &p->pkt_buf[i], p->packet_size);
-        av_log(avctx, AV_LOG_INFO, "3-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
 
         ret = mpp_buffer_get(p->pkt_grp, &p->md_buf[i], p->mdinfo_size);
-        av_log(avctx, AV_LOG_INFO, "4-failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
@@ -265,7 +258,9 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     prep_cfg->ver_stride    = p->ver_stride;
     prep_cfg->format        = p->fmt;
     prep_cfg->rotation      = MPP_ENC_ROT_0;
+    av_log(avctx, AV_LOG_ERROR, "mpi control init\n", ret);
     ret = mpi->control(ctx, MPP_ENC_SET_PREP_CFG, prep_cfg);
+    av_log(avctx, AV_LOG_ERROR, "mpi control finish %d\n", ret);
     if (ret) {
         return ret;
     }
@@ -388,6 +383,7 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
 static MPP_RET mpi_init(AVCodecContext *avctx){
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
+    
     ret = mpp_create(&p->ctx, &p->mpi);
     if (ret) {
         return ret;
@@ -440,7 +436,7 @@ static int prepare(AVCodecContext *avctx){
 static av_cold int encode_init(AVCodecContext *avctx){
     MpiEncData *p = avctx->priv_data;//hold data for global using
     MPP_RET ret = MPP_NOK;
-//    p = mpp_calloc(MpiEncData, 1);
+//    p = mpp_calloc(MpiEncData, 1); <--- do not remalloc here
     if(!p){
         return ret;
     }
@@ -456,7 +452,6 @@ static av_cold int encode_init(AVCodecContext *avctx){
 //    p->num_frames   = avctx->frame_number;
     
     p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;
-    av_log(avctx, AV_LOG_INFO, "dimensions: %d - num frames: %d\n", p->frame_size);
     p->packet_size  = p->width * p->height;
     p->mdinfo_size  = (((p->hor_stride + 255) & (~255)) / 16) * (p->ver_stride / 16) * 4;
     /*
@@ -472,12 +467,8 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->plt_table[5] = MPP_ENC_OSD_PLT_RED;
     p->plt_table[6] = MPP_ENC_OSD_PLT_BLUE;
     p->plt_table[7] = MPP_ENC_OSD_PLT_BLACK;
-    res_init(avctx);
-    av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's resources \n");
-    av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpi \n");    
+    res_init(avctx); 
     mpi_init(avctx);
-    av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's mpi \n");
-    av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpp \n");
     init_mpp(avctx);
     
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip\n");
