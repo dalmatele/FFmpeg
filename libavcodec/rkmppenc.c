@@ -448,8 +448,9 @@ static av_cold int encode_init(AVCodecContext *avctx){
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip\n");
     p->width = avctx->width;
     p->height = avctx->height;
-    av_log(avctx, AV_LOG_INFO, "width %d\n", p->width);
+    
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
+    av_log(avctx, AV_LOG_INFO, "width %d\n", p->hor_stride);
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
     p->fmt          = get_frame_format(avctx);
     p->type         = ffrkmpp_get_codingtype(avctx);
