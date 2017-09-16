@@ -458,7 +458,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->num_frames   = avctx->frame_number;
     
     p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;
-    av_log(avctx, AV_LOG_INFO, "dimensions: %d\n", p->frame_size);
+    av_log(avctx, AV_LOG_INFO, "dimensions: %d - num frames: %d\n", p->frame_size, p->num_frames);
     p->packet_size  = p->width * p->height;
     p->mdinfo_size  = (((p->hor_stride + 255) & (~255)) / 16) * (p->ver_stride / 16) * 4;
     /*
@@ -475,7 +475,6 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->plt_table[6] = MPP_ENC_OSD_PLT_BLUE;
     p->plt_table[7] = MPP_ENC_OSD_PLT_BLACK;
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's resources %d\n", p->num_frames);
-    mpp_assert(p);
     res_init(avctx);
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip's resources \n");
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip's mpi \n");    
