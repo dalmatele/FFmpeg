@@ -205,12 +205,13 @@ static MPP_RET res_init(AVCodecContext *avctx){
         }
 
         ret = mpp_buffer_get(p->frm_grp, &p->osd_idx_buf[i], p->osd_idx_size);
-        av_log(avctx, AV_LOG_INFO, "failed to get buffer for input frame ret %d\n", ret);
+        
         if (ret) {
             return ret;
         }
 
         ret = mpp_buffer_get(p->pkt_grp, &p->pkt_buf[i], p->packet_size);
+        av_log(avctx, AV_LOG_INFO, "failed to get buffer for input frame ret %d\n", ret);
         if (ret) {
             return ret;
         }
