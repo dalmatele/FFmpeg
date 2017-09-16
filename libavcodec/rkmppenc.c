@@ -509,6 +509,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     //encode packet
     MppTask task = NULL;
     MpiEncData *p = avctx->priv_data;
+    int result;
     mpi = p->mpi;
     ctx = p->ctx;
     //get frame
@@ -530,48 +531,47 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     buf = frame->data;//get frame data
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     mpp_frame_set_eos(p->frame, p->frm_eos);
-    av_log(avctx, AV_LOG_INFO, "Init packet \n");//<-- stop here
+//    av_log(avctx, AV_LOG_INFO, "Init packet \n");
     mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
-    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
-    av_log(avctx, AV_LOG_ERROR, "mpi dequeue result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "mpi dequeue result %d\n", ret);
     ret = mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
-    av_log(avctx, AV_LOG_ERROR, "met set frame result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "met set frame result %d\n", ret);
     ret = mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
-    av_log(avctx, AV_LOG_ERROR, "meta set packet result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "meta set packet result %d\n", ret);
     ret = mpp_task_meta_set_buffer(task, KEY_MOTION_INFO, md_info_buf);
-    av_log(avctx, AV_LOG_ERROR, "meta set buffer result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "meta set buffer result %d\n", ret);
     ret= mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
-    av_log(avctx, AV_LOG_ERROR, "gen osd result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "gen osd result %d\n", ret);
     ret = mpi->enqueue(ctx, MPP_PORT_INPUT, task);
-    av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d\n", ret);
     ret = mpi->poll(ctx, MPP_PORT_OUTPUT, MPP_POLL_BLOCK);
-    av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
-    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d\n", ret);
-    if (task) {
+//    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d\n", ret);
+    if (task) {//<--wait here, maybe we need to reprocess packet's data
         MppFrame packet_out = NULL;
         ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
         mpp_assert(packet_out == packet);
         if (packet) {
             void *ptr   = mpp_packet_get_pos(packet);
-            void *ptr_cpy;
             size_t len  = mpp_packet_get_length(packet);
-            //we must copy data to onther mem before release it
-            memcpy(ptr_cpy, ptr, len);
-            pkt->data = ptr_cpy;
+            result = ff_alloc_packet2(avctx, pkt, len, len);
+            av_log(avctx, AV_LOG_ERROR, "Can not alloc mem for packet %d \n", result);
+            memcpy(pkt->data, ptr, len);
             p->pkt_eos = mpp_packet_get_eos(packet);
-            mpp_packet_deinit(&packet);
-            
+            ret = mpp_packet_deinit(&packet);
+            av_log(avctx, AV_LOG_ERROR, "Deinit packet %d \n", ret);
             //get packet
             *got_packet = 1;
         }else{
             *got_packet = 0;
         }
         ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
-        av_log(avctx, AV_LOG_ERROR, "mpi enqueue2 result %d\n", ret);
+//        av_log(avctx, AV_LOG_ERROR, "mpi enqueue2 result %d\n", ret);
     }
     return 0;
 }
