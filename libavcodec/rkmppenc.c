@@ -542,7 +542,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     buf = frame->data;//get frame data
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     mpp_frame_set_eos(p->frame, p->frm_eos);
-    av_log(avctx, AV_LOG_INFO, "Init packet \n");
+    av_log(avctx, AV_LOG_INFO, "Init packet \n");//<-- stop here
+    mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
     if (ret) {
