@@ -192,11 +192,9 @@ static MPP_RET res_init(AVCodecContext *avctx){
     MpiEncData *p = avctx->priv_data;
     mpp_assert(p);
     av_log(avctx, AV_LOG_INFO, "Get buffer for frm_grp %d\n", p->num_frames);
-    ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);//<-- error in here
-    av_log(avctx, AV_LOG_INFO, "Can not get buffer for frm_grp (code = %d)\n", ret);
+    ret = mpp_buffer_group_get_internal(&p->frm_grp, MPP_BUFFER_TYPE_ION);
     av_log(avctx, AV_LOG_INFO, "Get buffer for pkt_grp \n");
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
-    av_log(avctx, AV_LOG_INFO, "Get buffer for other components \n");
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
@@ -450,6 +448,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     av_log(avctx, AV_LOG_INFO, "Start initing rockchip\n");
     p->width = avctx->width;
     p->height = avctx->height;
+    av_log(avctx, AV_LOG_INFO, "width %d\n", p->width);
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
     p->fmt          = get_frame_format(avctx);
