@@ -115,6 +115,7 @@ static MPP_RET mpp_deinit(MpiEncData *p)
 {
     MPP_RET ret;
     av_log(NULL, AV_LOG_ERROR, "Destroy mpp");
+    mpp_assert(p->ctx);
     if (p->ctx) {
         ret = mpp_destroy(p->ctx);
         av_log(NULL, AV_LOG_ERROR, "Destroy mpp %d\n", ret);
