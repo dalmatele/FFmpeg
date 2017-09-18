@@ -503,7 +503,7 @@ static av_cold int encode_close(AVCodecContext *avctx){
     if (ret) {        
         goto MPP_TEST_OUT;
     }
-    return 0;
+    
     MPP_TEST_OUT:
         mpp_deinit(p);
         res_deinit(p);
