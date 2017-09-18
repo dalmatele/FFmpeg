@@ -536,8 +536,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppBuffer md_info_buf = p->md_buf[0];
     MppBuffer osd_data_buf = p->osd_idx_buf[0];
     MppEncOSDData osd_data;
-    void *buf = mpp_buffer_get_ptr(frm_buf_in);
-    buf = frame->data;//get frame data
+    void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
+    buf = frame->data[0];//see frame.h to know about data format
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     mpp_frame_set_eos(p->frame, p->frm_eos);
 //    av_log(avctx, AV_LOG_INFO, "Init packet \n");
