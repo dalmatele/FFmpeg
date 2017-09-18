@@ -112,8 +112,10 @@ static MppFrameFormat get_frame_format(AVCodecContext *avctx){
 
 static MPP_RET mpp_deinit(MpiEncData *p)
 {
+    MPP_RET ret;
     if (p->ctx) {
-        mpp_destroy(p->ctx);
+        ret = mpp_destroy(p->ctx);
+        av_log(avctx, AV_LOG_INFO, "Destroy mpp %d\n", ret);
         p->ctx = NULL;
     }
 
@@ -122,6 +124,7 @@ static MPP_RET mpp_deinit(MpiEncData *p)
 
 static MPP_RET res_deinit(MpiEncData *p)
 {
+    MPP_RET ret;
     RK_U32 i;
 
     mpp_assert(p);
@@ -149,12 +152,14 @@ static MPP_RET res_deinit(MpiEncData *p)
     }
 
     if (p->frm_grp) {
-        mpp_buffer_group_put(p->frm_grp);
+        ret = mpp_buffer_group_put(p->frm_grp);
+        av_log(avctx, AV_LOG_INFO, "Flush frame group %d\n", ret);
         p->frm_grp = NULL;
     }
 
     if (p->pkt_grp) {
-        mpp_buffer_group_put(p->pkt_grp);
+        ret = mpp_buffer_group_put(p->pkt_grp);
+        av_log(avctx, AV_LOG_INFO, "Flush packet group %d\n", ret);
         p->pkt_grp = NULL;
     }
 
@@ -476,10 +481,12 @@ static av_cold int encode_close(AVCodecContext *avctx){
     MPP_RET ret = MPP_NOK;
     MpiEncData *p = avctx->priv_data;
     if (p->frame) {
-        mpp_frame_deinit(&p->frame);
+        ret = mpp_frame_deinit(&p->frame);
+        av_log(avctx, AV_LOG_INFO, "Flush frame %d\n", ret);
         p->frame = NULL;
     }
     ret = p->mpi->reset(p->ctx);
+    av_log(avctx, AV_LOG_INFO, "Reset mpi %d\n", ret);
     if (ret) {        
         goto MPP_TEST_OUT;
     }
