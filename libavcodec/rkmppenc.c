@@ -25,7 +25,7 @@ const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
     AV_PIX_FMT_NONE //must have this to terminate
 };
 
-#define MPI_ENC_IO_COUNT            (4)//4 frames each time
+#define MPI_ENC_IO_COUNT            (1)//4 frames each time
 #define MAX_FILE_NAME_LENGTH        256
 
 #define MPI_ENC_TEST_SET_IDR_FRAME  0
@@ -87,7 +87,7 @@ typedef struct {
     RK_S32 qp_max;
     RK_S32 qp_step;
     RK_S32 qp_init;
-    int i;
+//    int i;
 } MpiEncData;
 
 static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
@@ -484,7 +484,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     init_mpp(avctx);
     
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip\n");
-    p->i = 0;
+//    p->i = 0;
     return 0;
 }
 
@@ -532,13 +532,13 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpi = p->mpi;
     ctx = p->ctx;
     
-    p->i++;
-    MppBuffer frm_buf_in  = p->frm_buf[p->i];
-    MppBuffer pkt_buf_out = p->pkt_buf[p->i];
-    MppBuffer md_info_buf = p->md_buf[p->i];
-    MppBuffer osd_data_buf = p->osd_idx_buf[p->i];
-    if (p->i == MPI_ENC_IO_COUNT)
-            p->i = 0;
+//    p->i++;
+    MppBuffer frm_buf_in  = p->frm_buf[0];
+    MppBuffer pkt_buf_out = p->pkt_buf[0];
+    MppBuffer md_info_buf = p->md_buf[0];
+    MppBuffer osd_data_buf = p->osd_idx_buf[0];
+//    if (p->i == MPI_ENC_IO_COUNT)
+//            p->i = 0;
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
     buf = frame->data;//see frame.h to know about data format
