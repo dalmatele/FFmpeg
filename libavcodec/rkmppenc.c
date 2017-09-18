@@ -250,7 +250,8 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     codec_cfg = &p->codec_cfg;
     prep_cfg = &p->prep_cfg;
     rc_cfg = &p->rc_cfg;
-    p->fps = 30;
+    p->fps = avctx->time_base.den / avctx->time_base.num / FFMAX(avctx->ticks_per_frame, 1);
+    
     p->gop = 60;
     p->bps = p->width * p->height / 8 * p->fps;
     p->qp_init  = (p->type == MPP_VIDEO_CodingMJPEG) ? (10) : (26);
@@ -377,6 +378,12 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
 
     /* gen and cfg osd plt */
     mpi_enc_gen_osd_plt(&p->osd_plt, p->plt_table);
+    ret = mpp_frame_init(&p->frame);
+    mpp_frame_set_width(p->frame, p->width);
+    mpp_frame_set_height(p->frame, p->height);
+    mpp_frame_set_hor_stride(p->frame, p->hor_stride);
+    mpp_frame_set_ver_stride(p->frame, p->ver_stride);
+    mpp_frame_set_fmt(p->frame, p->fmt);
     return MPP_OK;
 }
 
@@ -521,13 +528,13 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpi = p->mpi;
     ctx = p->ctx;
     //get frame
-    ret = mpp_frame_init(&p->frame);
+//    ret = mpp_frame_init(&p->frame);
 //    av_log(avctx, AV_LOG_ERROR, "mpp frame init result %d", ret);
-    mpp_frame_set_width(p->frame, p->width);
-    mpp_frame_set_height(p->frame, p->height);
-    mpp_frame_set_hor_stride(p->frame, p->hor_stride);
-    mpp_frame_set_ver_stride(p->frame, p->ver_stride);
-    mpp_frame_set_fmt(p->frame, p->fmt);
+//    mpp_frame_set_width(p->frame, p->width);
+//    mpp_frame_set_height(p->frame, p->height);
+//    mpp_frame_set_hor_stride(p->frame, p->hor_stride);
+//    mpp_frame_set_ver_stride(p->frame, p->ver_stride);
+//    mpp_frame_set_fmt(p->frame, p->fmt);
     
     
     MppBuffer frm_buf_in  = p->frm_buf[0];
@@ -540,10 +547,9 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     mpp_frame_set_eos(p->frame, p->frm_eos);
 //    av_log(avctx, AV_LOG_INFO, "Init packet \n");
-    mpp_assert(pkt_buf_out);
+//    mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
-    av_log(avctx, AV_LOG_ERROR, "mpi poll result %d\n", ret);
     
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
     if(task == NULL){
@@ -564,7 +570,6 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
 //    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d\n", ret);
     if (task) {
-        av_log(avctx, AV_LOG_ERROR, "We have task\n");
         MppFrame packet_out = NULL;
         ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
         mpp_assert(packet_out == packet);
