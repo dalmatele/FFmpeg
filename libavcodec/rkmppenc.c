@@ -532,7 +532,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpi = p->mpi;
     ctx = p->ctx;
     
-    
+    p->i++;
     MppBuffer frm_buf_in  = p->frm_buf[p->i];
     MppBuffer pkt_buf_out = p->pkt_buf[p->i];
     MppBuffer md_info_buf = p->md_buf[p->i];
