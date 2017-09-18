@@ -304,7 +304,8 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     rc_cfg->gop              = p->gop;
     rc_cfg->skip_cnt         = 0;
     ret = mpi->control(ctx, MPP_ENC_SET_RC_CFG, rc_cfg);
-    av_log(avctx, AV_LOG_ERROR, "rc conig result %d\n", ret);
+    av_log(avctx, AV_LOG_ERROR, "mpi_enc_test bps %d fps %d gop %d\n",
+            rc_cfg->bps_target, rc_cfg->fps_out_num, rc_cfg->gop);
     codec_cfg->coding = p->type;
     switch (codec_cfg->coding) {
     case MPP_VIDEO_CodingAVC : {
