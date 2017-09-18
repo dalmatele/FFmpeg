@@ -199,6 +199,7 @@ static MPP_RET res_init(AVCodecContext *avctx){
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
+        av_log(avctx, AV_LOG_ERROR, "frame size %p\n", p->frame_size);
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
         if (ret) {
             return ret;
@@ -528,14 +529,6 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     int result;
     mpi = p->mpi;
     ctx = p->ctx;
-    //get frame
-//    ret = mpp_frame_init(&p->frame);
-//    av_log(avctx, AV_LOG_ERROR, "mpp frame init result %d", ret);
-//    mpp_frame_set_width(p->frame, p->width);
-//    mpp_frame_set_height(p->frame, p->height);
-//    mpp_frame_set_hor_stride(p->frame, p->hor_stride);
-//    mpp_frame_set_ver_stride(p->frame, p->ver_stride);
-//    mpp_frame_set_fmt(p->frame, p->fmt);
     
     
     MppBuffer frm_buf_in  = p->frm_buf[0];
@@ -577,13 +570,13 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         if (packet) {
             void *ptr   = mpp_packet_get_pos(packet);
             size_t len  = mpp_packet_get_length(packet);
-            av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
+//            av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
             result = ff_alloc_packet2(avctx, pkt, len, len);
             
             memcpy(pkt->data, ptr, len);
             p->pkt_eos = mpp_packet_get_eos(packet);
             ret = mpp_packet_deinit(&packet);
-            av_log(avctx, AV_LOG_ERROR, "Deinit packet %d \n", ret);
+//            av_log(avctx, AV_LOG_ERROR, "Deinit packet %d \n", ret);
             //get packet
             *got_packet = 1;
         }else{
