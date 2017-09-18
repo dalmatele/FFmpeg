@@ -553,6 +553,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     RK_U8 *buf_y = buf;
     RK_U8 *buf_u = buf_y + hor_stride * ver_stride; // NOTE: diff from gen_yuv_image
     RK_U8 *buf_v = buf_u + hor_stride * ver_stride / 4; // NOTE: diff from gen_yuv_image
+    
     buf_y = frame->data[0];
     buf_u = frame->data[1];
     buf_v = frame->data[2];
