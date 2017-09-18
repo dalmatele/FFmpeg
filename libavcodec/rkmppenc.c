@@ -571,19 +571,20 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             void *ptr   = mpp_packet_get_pos(packet);
             size_t len  = mpp_packet_get_length(packet);
 //            av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
-            result = ff_alloc_packet2(avctx, pkt, len, len);
+            result = ff_alloc_packet2(avctx, pkt, len, 0);
             
             memcpy(pkt->data, ptr, len);
             p->pkt_eos = mpp_packet_get_eos(packet);
             ret = mpp_packet_deinit(&packet);
-//            av_log(avctx, AV_LOG_ERROR, "Deinit packet %d \n", ret);
+            av_log(avctx, AV_LOG_ERROR, "Deinit packet %d \n", p->pkt_eos);
             //get packet
             *got_packet = 1;
         }else{
             *got_packet = 0;
         }
         ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
-//        av_log(avctx, AV_LOG_ERROR, "mpi enqueue2 result %d\n", ret);
+        p->frame_count++;
+        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
     }
     return 0;
 }
