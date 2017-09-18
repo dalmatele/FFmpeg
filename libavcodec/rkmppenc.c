@@ -532,6 +532,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppTask task = NULL;
     MpiEncData *p = avctx->priv_data;
     int result;
+    RK_U32 hor_stride   = p->hor_stride;
+    RK_U32 ver_stride   = p->ver_stride;
     mpi = p->mpi;
     ctx = p->ctx;
     int size;
@@ -545,9 +547,17 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //            p->i = 0;
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
-    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
-            frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
-//    buf = frame->data;//see frame.h to know about data format
+//    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
+//            frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
+    //read yuv data
+    RK_U8 *buf_y = buf;
+    RK_U8 *buf_u = buf_y + hor_stride * ver_stride; // NOTE: diff from gen_yuv_image
+    RK_U8 *buf_v = buf_u + hor_stride * ver_stride / 4; // NOTE: diff from gen_yuv_image
+    buf_y = frame->data[0];
+    buf_u = frame->data[1];
+    buf_v = frame->data[2];
+    //end read yuv data
+    
     av_log(avctx, AV_LOG_ERROR, "size of data %d\n", size);
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     mpp_frame_set_eos(p->frame, p->frm_eos);
