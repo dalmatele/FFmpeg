@@ -15,6 +15,7 @@
 #include "rockchip/mpp_log.h"
 #include "rockchip/mpp_err.h"
 #include "libavutil/log.h"
+#include "libavutil/imgutils.h"
 
 //allocate mem --> mpi init --> mpp init --> configure some params --> encode
 // Note: always run with sudo permision
@@ -544,7 +545,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //            p->i = 0;
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
-    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
+    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
+            frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
 //    buf = frame->data;//see frame.h to know about data format
     av_log(avctx, AV_LOG_ERROR, "size of data %d\n", size);
     mpp_frame_set_buffer(p->frame, frm_buf_in);
