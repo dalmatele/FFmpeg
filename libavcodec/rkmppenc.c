@@ -581,7 +581,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             memcpy(pkt->data, ptr, len);
             p->pkt_eos = mpp_packet_get_eos(packet);
             ret = mpp_packet_deinit(&packet);
-            av_log(avctx, AV_LOG_ERROR, "Deinit packet %d \n", p->pkt_eos);
+            av_log(avctx, AV_LOG_ERROR, "Encode frame %d size %d \n", p->frame_count, len);
             //get packet
             *got_packet = 1;
         }else{
