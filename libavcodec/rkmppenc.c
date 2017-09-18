@@ -484,7 +484,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     init_mpp(avctx);
     
     av_log(avctx, AV_LOG_INFO, "Finish initing rockchip\n");
-    i = 0;
+    p->i = 0;
     return 0;
 }
 
