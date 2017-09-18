@@ -115,7 +115,7 @@ static MPP_RET mpp_deinit(MpiEncData *p)
     MPP_RET ret;
     if (p->ctx) {
         ret = mpp_destroy(p->ctx);
-        av_log(avctx, AV_LOG_INFO, "Destroy mpp %d\n", ret);
+        av_log(NULL, AV_LOG_INFO, "Destroy mpp %d\n", ret);
         p->ctx = NULL;
     }
 
@@ -153,13 +153,13 @@ static MPP_RET res_deinit(MpiEncData *p)
 
     if (p->frm_grp) {
         ret = mpp_buffer_group_put(p->frm_grp);
-        av_log(avctx, AV_LOG_INFO, "Flush frame group %d\n", ret);
+        av_log(NULL, AV_LOG_INFO, "Flush frame group %d\n", ret);
         p->frm_grp = NULL;
     }
 
     if (p->pkt_grp) {
         ret = mpp_buffer_group_put(p->pkt_grp);
-        av_log(avctx, AV_LOG_INFO, "Flush packet group %d\n", ret);
+        av_log(NULL, AV_LOG_INFO, "Flush packet group %d\n", ret);
         p->pkt_grp = NULL;
     }
 
