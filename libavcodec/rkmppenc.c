@@ -17,6 +17,7 @@
 #include "libavutil/log.h"
 
 //allocate mem --> mpi init --> mpp init --> configure some params --> encode
+// Note: always run with sudo permision
 
 const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
     AV_PIX_FMT_NV21,
@@ -124,7 +125,7 @@ static MPP_RET res_deinit(MpiEncData *p)
     RK_U32 i;
 
     mpp_assert(p);
-
+    
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         if (p->frm_buf[i]) {
             mpp_buffer_put(p->frm_buf[i]);
@@ -555,7 +556,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //    av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
 //    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d\n", ret);
-    if (task) {//<--wait here, maybe we need to reprocess packet's data
+    if (task) {
         av_log(avctx, AV_LOG_ERROR, "We have task\n");
         MppFrame packet_out = NULL;
         ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
@@ -563,8 +564,9 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         if (packet) {
             void *ptr   = mpp_packet_get_pos(packet);
             size_t len  = mpp_packet_get_length(packet);
+            av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
             result = ff_alloc_packet2(avctx, pkt, len, len);
-            av_log(avctx, AV_LOG_ERROR, "Can not alloc mem for packet %d \n", result);
+            
             memcpy(pkt->data, ptr, len);
             p->pkt_eos = mpp_packet_get_eos(packet);
             ret = mpp_packet_deinit(&packet);
