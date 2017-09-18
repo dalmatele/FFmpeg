@@ -114,7 +114,7 @@ static MppFrameFormat get_frame_format(AVCodecContext *avctx){
 static MPP_RET mpp_deinit(MpiEncData *p)
 {
     MPP_RET ret;
-    av_log(NULL, AV_LOG_ERROR, "Destroy mpp");
+    av_log(NULL, AV_LOG_ERROR, "Destroy mpp\n");
     mpp_assert(p->ctx);
     if (p->ctx) {
         ret = mpp_destroy(p->ctx);
@@ -533,6 +533,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     int result;
     mpi = p->mpi;
     ctx = p->ctx;
+    int size;
     
 //    p->i++;
     MppBuffer frm_buf_in  = p->frm_buf[0];
@@ -543,8 +544,9 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //            p->i = 0;
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
-    buf = frame->data;//see frame.h to know about data format
-//    av_log(avctx, AV_LOG_ERROR, "size of data %d\n", sizeof(frame->data));
+    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), frame->data, frame->linesize, avctx->pix_fmt, p->width, p->height, 1);
+//    buf = frame->data;//see frame.h to know about data format
+    av_log(avctx, AV_LOG_ERROR, "size of data %d\n", size);
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     mpp_frame_set_eos(p->frame, p->frm_eos);
 //    av_log(avctx, AV_LOG_INFO, "Init packet \n");
