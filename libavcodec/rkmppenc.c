@@ -523,7 +523,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
     size = mpp_buffer_get_size(frm_buf_in);
-    av_log(avctx, AV_LOG_ERROR, "Size of frame %d\n", size);
+    av_log(avctx, AV_LOG_ERROR, "Size of buffer %d\n", size);
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
     av_log(avctx, AV_LOG_ERROR, "Size of frame %d\n", size);
@@ -562,7 +562,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         if (packet) {
             void *ptr   = mpp_packet_get_pos(packet);
             size_t len  = mpp_packet_get_length(packet);
-//            av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
+            av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
             ff_alloc_packet2(avctx, pkt, len, 0);
             
             memcpy(pkt->data, ptr, len);
