@@ -549,6 +549,7 @@ static void rkmpp_flush(AVCodecContext *avctx)
 
 #define RKMPP_DEC(NAME, ID, BSFS) \
     RKMPP_DEC_CLASS(NAME) \
+    FFRKMPP_DEC_HWACCEL(NAME, ID) \
     AVCodec ff_##NAME##_rkmpp_decoder = { \
         .name           = #NAME "_rkmpp", \
         .long_name      = NULL_IF_CONFIG_SMALL(#NAME " (rkmpp)"), \
