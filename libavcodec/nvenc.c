@@ -1666,6 +1666,13 @@ static int nvenc_set_timestamp(AVCodecContext *avctx,
     return 0;
 }
 
+/**
+ * 
+ * @param avctx 
+ * @param pkt output packet
+ * @param tmpoutsurf
+ * @return 
+ */
 static int process_output_surface(AVCodecContext *avctx, AVPacket *pkt, NvencSurface *tmpoutsurf)
 {
     NvencContext *ctx = avctx->priv_data;

@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+
 #include <drm_fourcc.h>
 #include <pthread.h>
 #include <rockchip/mpp_buffer.h>
@@ -84,6 +85,7 @@ static int rkmpp_get_frameformat(MppFrameFormat mppformat)
     }
 }
 
+
 static int rkmpp_write_data(AVCodecContext *avctx, uint8_t *buffer, int size, int64_t pts)
 {
     RKMPPDecodeContext *rk_context = avctx->priv_data;
@@ -118,6 +120,7 @@ static int rkmpp_write_data(AVCodecContext *avctx, uint8_t *buffer, int size, in
 
     return ret;
 }
+
 
 static int rkmpp_close_decoder(AVCodecContext *avctx)
 {
@@ -266,6 +269,7 @@ static int rkmpp_send_packet(AVCodecContext *avctx, const AVPacket *avpkt)
         av_log(avctx, AV_LOG_DEBUG, "End of stream.\n");
         decoder->eos_reached = 1;
         ret = rkmpp_write_data(avctx, NULL, 0, 0);
+
         if (ret)
             av_log(avctx, AV_LOG_ERROR, "Failed to send EOS to decoder (code = %d)\n", ret);
         return ret;
@@ -412,6 +416,7 @@ retry_get_frame:
             desc->nb_layers = 1;
             layer = &desc->layers[0];
             layer->format = rkmpp_get_frameformat(mpp_frame_get_fmt(mppframe));
+
             layer->nb_planes = 2;
 
             layer->planes[0].object_index = 0;
