@@ -20,6 +20,11 @@
 //allocate mem --> mpi init --> mpp init --> configure some params --> encode
 // Note: always run with sudo permision
 
+static const AVClass rkmpp_h264_enc_class = { \
+        .class_name = "rkmpp_h64_enc", \
+        .version    = LIBAVUTIL_VERSION_INT, \
+    };
+
 const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
     AV_PIX_FMT_NV21,
     AV_PIX_FMT_YUV420P,
@@ -90,6 +95,8 @@ typedef struct {
     RK_S32 qp_init;
 //    int i;
 } MpiEncData;
+
+
 
 static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
 {
@@ -505,37 +512,25 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     //encode packet
     MppTask task = NULL;
     MpiEncData *p = avctx->priv_data;
-//    int result;
-//    RK_U32 hor_stride   = p->hor_stride;
-//    RK_U32 ver_stride   = p->ver_stride;
     mpi = p->mpi;
     ctx = p->ctx;
     int size;
-    
 //    p->i++;
     MppBuffer frm_buf_in  = p->frm_buf[0];
     MppBuffer pkt_buf_out = p->pkt_buf[0];
     MppBuffer md_info_buf = p->md_buf[0];
     MppBuffer osd_data_buf = p->osd_idx_buf[0];
-//    if (p->i == MPI_ENC_IO_COUNT)
-//            p->i = 0;
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
+    size = mpp_buffer_get_size(frm_buf_in);
+    av_log(avctx, AV_LOG_ERROR, "Size of frame %d\n", size);
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
     av_log(avctx, AV_LOG_ERROR, "Size of frame %d\n", size);
-//    //read yuv data
-//    RK_U8 *buf_y = buf;
-//    RK_U8 *buf_u = buf_y + hor_stride * ver_stride; // NOTE: diff from gen_yuv_image
-//    RK_U8 *buf_v = buf_u + hor_stride * ver_stride / 4; // NOTE: diff from gen_yuv_image
-//    
-//    buf_y = frame->data[0];
-//    buf_u = frame->data[1];
-//    buf_v = frame->data[2];
-//    //end read yuv data
     
     
     mpp_frame_set_buffer(p->frame, frm_buf_in);
+    
     mpp_frame_set_eos(p->frame, p->frm_eos);
 //    av_log(avctx, AV_LOG_INFO, "Init packet \n");
 //    mpp_assert(pkt_buf_out);
@@ -598,4 +593,5 @@ AVCodec ff_h264_rkmpp_encoder = {
     .close = encode_close,
     .encode2 = encode_frame,
     .priv_data_size = sizeof(MpiEncData),//size of private data, if not use we can not cast priv_data to our pointer
+//    .priv_class     = &rkmpp_h264_enc_class,
 };
