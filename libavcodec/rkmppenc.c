@@ -540,9 +540,9 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     RK_U8 *buf_u = buf_y + p->hor_stride * p->ver_stride; // NOTE: diff from gen_yuv_image
     RK_U8 *buf_v = buf_u + p->hor_stride * p->ver_stride / 4; // NOTE: diff from gen_yuv_image
     //read data
-    memcpy(buf_y, frame->data[0], frame->linesize[0] * p->height);
-    memcpy(buf_u, frame->data[1], frame->linesize[1] * p->height);
-    memcpy(buf_v, frame->data[2], frame->linesize[2] * p->height);
+    memcpy(buf_y, frame->data[0], frame->linesize[0]);
+    memcpy(buf_u, frame->data[1], frame->linesize[1]);
+    memcpy(buf_v, frame->data[2], frame->linesize[2]);
     
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     
