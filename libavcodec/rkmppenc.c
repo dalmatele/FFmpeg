@@ -93,6 +93,7 @@ typedef struct {
 
 static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
 {
+    av_log(NULL, AV_LOG_ERROR, "coding type %d\n", avctx->codec_id);
     switch (avctx->codec_id) {
     case AV_CODEC_ID_H264:  return MPP_VIDEO_CodingAVC;
     case AV_CODEC_ID_HEVC:  return MPP_VIDEO_CodingHEVC;
@@ -103,7 +104,6 @@ static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
 
 static MppFrameFormat get_frame_format(AVCodecContext *avctx){
     av_log(NULL, AV_LOG_ERROR, "frame format %d\n", *(avctx->codec->pix_fmts));
-    av_log(NULL, AV_LOG_ERROR, "AV_PIX_FMT_NV21: %d\n", AV_PIX_FMT_NV21);
     switch(*(avctx->codec->pix_fmts)){
         case AV_PIX_FMT_NV21:
             return MPP_FMT_YUV420SP;
@@ -377,12 +377,12 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     } break;
     }
     ret = mpi->control(ctx, MPP_ENC_SET_CODEC_CFG, codec_cfg);
-    av_log(avctx, AV_LOG_ERROR, "codec conig result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "codec conig result %d\n", ret);
 
     /* optional */
     p->sei_mode = MPP_ENC_SEI_MODE_ONE_FRAME;
     ret = mpi->control(ctx, MPP_ENC_SET_SEI_CFG, &p->sei_mode);
-    av_log(avctx, AV_LOG_ERROR, "sei mode result %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "sei mode result %d\n", ret);
 
     /* gen and cfg osd plt */
     mpi_enc_gen_osd_plt(&p->osd_plt, p->plt_table);
@@ -400,13 +400,13 @@ static MPP_RET mpi_init(AVCodecContext *avctx){
     MpiEncData *p = avctx->priv_data;
     av_log(avctx, AV_LOG_ERROR, "create mpi context\n");
     ret = mpp_create(&p->ctx, &p->mpi);
-    av_log(avctx, AV_LOG_ERROR, "Finish mpi init context %d\n", ret);
+//    av_log(avctx, AV_LOG_ERROR, "Finish mpi init context %d\n", ret);
     if (ret) {
         return ret;
     }
-    av_log(avctx, AV_LOG_ERROR, "create mpi\n");
+//    av_log(avctx, AV_LOG_ERROR, "create mpi\n");
     ret = mpp_init(p->ctx, MPP_CTX_ENC, p->type);
-    av_log(avctx, AV_LOG_ERROR, "finish creating mpi %d - %d\n", ret, p->type);
+//    av_log(avctx, AV_LOG_ERROR, "finish creating mpi %d - %d\n", ret, p->type);
     if (ret){
         return ret;
     }
