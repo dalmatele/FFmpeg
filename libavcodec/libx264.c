@@ -116,6 +116,7 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
     X264Context *x4 = ctx->priv_data;
     uint8_t *p;
     int i, size = x4->sei_size, ret;
+    int total = 0;
 
     if (!nnal)
         return 0;
@@ -135,6 +136,7 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
             return -1;
         }
         memcpy(p, x4->sei, x4->sei_size);
+        total += x4->sei_size;
         p += x4->sei_size;
         x4->sei_size = 0;
         av_freep(&x4->sei);
@@ -143,8 +145,9 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
     for (i = 0; i < nnal; i++){
         memcpy(p, nals[i].p_payload, nals[i].i_payload);
         p += nals[i].i_payload;
+        total += nals[i].i_payload;
     }
-
+    av_log(ctx, AV_LOG_ERROR, "total %d\n", total);
     return 1;
 }
 
@@ -337,6 +340,7 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
             return AVERROR_EXTERNAL;
 
         ret = encode_nals(ctx, pkt, nal, nnal);
+        
         if (ret < 0)
             return ret;
     } while (!ret && !frame && x264_encoder_delayed_frames(x4->enc));
