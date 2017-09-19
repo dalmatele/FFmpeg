@@ -2764,13 +2764,9 @@ h264_qsv_decoder_select="h264_mp4toannexb_bsf h264_parser qsvdec h264_qsv_hwacce
 h264_qsv_encoder_deps="libmfx"
 h264_qsv_encoder_select="qsvenc"
 h264_rkmpp_decoder_deps="rkmpp"
-<<<<<<< HEAD
 h264_rkmpp_decoder_select="h264_mp4toannexb_bsf"
-=======
-h264_rkmpp_decoder_select="h264_mp4toannexb_bsf rkmpp h264_rkmpp_hwaccel"
 h264_rkmpp_encoder_deps="rkmpp"
 h264_rkmpp_encoder_select="rkmpp"
->>>>>>> rockchip-support
 h264_vaapi_encoder_deps="VAEncPictureParameterBufferH264"
 h264_vaapi_encoder_select="vaapi_encode golomb"
 h264_vda_decoder_deps="vda"
@@ -2787,11 +2783,7 @@ hevc_qsv_decoder_select="hevc_mp4toannexb_bsf hevc_parser qsvdec hevc_qsv_hwacce
 hevc_qsv_encoder_deps="libmfx"
 hevc_qsv_encoder_select="hevcparse qsvenc"
 hevc_rkmpp_decoder_deps="rkmpp"
-<<<<<<< HEAD
 hevc_rkmpp_decoder_select="hevc_mp4toannexb_bsf"
-=======
-hevc_rkmpp_decoder_select="hevc_mp4toannexb_bsf rkmpp hevc_rkmpp_hwaccel"
->>>>>>> rockchip-support
 hevc_vaapi_encoder_deps="VAEncPictureParameterBufferHEVC"
 hevc_vaapi_encoder_select="vaapi_encode golomb"
 mjpeg_cuvid_decoder_deps="cuda cuvid"
@@ -2832,11 +2824,7 @@ vp8_mediacodec_decoder_deps="mediacodec"
 vp8_qsv_decoder_deps="libmfx"
 vp8_qsv_decoder_select="qsvdec vp8_qsv_hwaccel vp8_parser"
 vp8_rkmpp_decoder_deps="rkmpp"
-<<<<<<< HEAD
 vp8_rkmpp_decoder_select="rkmpp"
-=======
-vp8_rkmpp_decoder_select="rkmpp vp8_rkmpp_hwaccel"
->>>>>>> rockchip-support
 vp8_vaapi_encoder_deps="VAEncPictureParameterBufferVP8"
 vp8_vaapi_encoder_select="vaapi_encode"
 vp9_cuvid_decoder_deps="cuda cuvid"
