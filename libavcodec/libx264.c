@@ -135,7 +135,6 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
             return -1;
         }
         memcpy(p, x4->sei, x4->sei_size);
-        total += x4->sei_size;
         p += x4->sei_size;
         x4->sei_size = 0;
         av_freep(&x4->sei);
@@ -144,7 +143,6 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
     for (i = 0; i < nnal; i++){
         memcpy(p, nals[i].p_payload, nals[i].i_payload);
         p += nals[i].i_payload;
-        total += nals[i].i_payload;
     }
     
     return 1;
