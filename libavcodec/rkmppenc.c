@@ -505,7 +505,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     //encode packet
     MppTask task = NULL;
     MpiEncData *p = avctx->priv_data;
-    int result;
+//    int result;
 //    RK_U32 hor_stride   = p->hor_stride;
 //    RK_U32 ver_stride   = p->ver_stride;
     mpi = p->mpi;
@@ -576,6 +576,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //            av_log(avctx, AV_LOG_ERROR, "Encode frame %d size %d \n", p->frame_count, len);
             //get packet
             *got_packet = 1;
+            pkt->flags |= AV_PKT_FLAG_KEY;
         }else{
             *got_packet = 0;
         }
