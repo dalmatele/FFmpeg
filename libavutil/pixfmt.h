@@ -325,8 +325,6 @@ enum AVPixelFormat {
      * an array texture (or always 0 if it's a normal texture).
      */
     AV_PIX_FMT_D3D11,
-
-<<<<<<< HEAD
     AV_PIX_FMT_GRAY9BE,   ///<        Y        , 9bpp, big-endian
     AV_PIX_FMT_GRAY9LE,   ///<        Y        , 9bpp, little-endian
 
@@ -334,8 +332,6 @@ enum AVPixelFormat {
     AV_PIX_FMT_GBRPF32LE,  ///< IEEE-754 single precision planar GBR 4:4:4,     96bpp, little-endian
     AV_PIX_FMT_GBRAPF32BE, ///< IEEE-754 single precision planar GBRA 4:4:4:4, 128bpp, big-endian
     AV_PIX_FMT_GBRAPF32LE, ///< IEEE-754 single precision planar GBRA 4:4:4:4, 128bpp, little-endian
-=======
->>>>>>> rockchip-support
     /**
      * DRM-managed buffers exposed through PRIME buffer sharing.
      *
