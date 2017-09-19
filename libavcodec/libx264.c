@@ -116,14 +116,13 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
     X264Context *x4 = ctx->priv_data;
     uint8_t *p;
     int i, size = x4->sei_size, ret;
-    int total = 0;
 
     if (!nnal)
         return 0;
 
     for (i = 0; i < nnal; i++)
         size += nals[i].i_payload;
-
+    av_log(ctx, AV_LOG_ERROR, "total %d\n", size);
     if ((ret = ff_alloc_packet2(ctx, pkt, size, 0)) < 0)
         return ret;
 
@@ -147,7 +146,7 @@ static int encode_nals(AVCodecContext *ctx, AVPacket *pkt,
         p += nals[i].i_payload;
         total += nals[i].i_payload;
     }
-    av_log(ctx, AV_LOG_ERROR, "total %d\n", total);
+    
     return 1;
 }
 
