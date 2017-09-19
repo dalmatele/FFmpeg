@@ -437,7 +437,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
     p->fmt          = get_frame_format(avctx);//input format
-    p->type         = MPP_VIDEO_CodingAVC//ffrkmpp_get_codingtype(avctx);//output coding
+    p->type         = MPP_VIDEO_CodingAVC;//ffrkmpp_get_codingtype(avctx);//output coding
     
     p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;    
 //    av_log(avctx, AV_LOG_INFO, "frame size %d\n", p->frame_size);
