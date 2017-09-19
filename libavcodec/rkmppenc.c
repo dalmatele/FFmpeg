@@ -102,6 +102,7 @@ static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
 }
 
 static MppFrameFormat get_frame_format(AVCodecContext *avctx){
+    av_log(NULL, AV_LOG_ERROR, "frame format %d\n", *(avctx->codec->pix_fmts));
     switch(*(avctx->codec->pix_fmts)){
         case AV_PIX_FMT_NV21:
             return MPP_FMT_YUV420SP;
@@ -115,11 +116,11 @@ static MppFrameFormat get_frame_format(AVCodecContext *avctx){
 static MPP_RET mpp_deinit(MpiEncData *p)
 {
     MPP_RET ret;
-    av_log(NULL, AV_LOG_ERROR, "Destroy mpp\n");
+//    av_log(NULL, AV_LOG_ERROR, "Destroy mpp\n");
     mpp_assert(p->ctx);
     if (p->ctx) {
         ret = mpp_destroy(p->ctx);
-        av_log(NULL, AV_LOG_ERROR, "Destroy mpp %d\n", ret);
+//        av_log(NULL, AV_LOG_ERROR, "Destroy mpp %d\n", ret);
         p->ctx = NULL;
     }
 
