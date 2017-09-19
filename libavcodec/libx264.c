@@ -316,7 +316,7 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
             size_t sei_size;
 
             ret = ff_alloc_a53_sei(frame, 0, &sei_data, &sei_size);
-            av_log(ctx, AV_LOG_ERROR, "sei size %d\n", sei_size);
+//            av_log(ctx, AV_LOG_ERROR, "sei size %d\n", sei_size);
             if (ret < 0) {
                 av_log(ctx, AV_LOG_ERROR, "Not enough memory for closed captions, skipping\n");
                 

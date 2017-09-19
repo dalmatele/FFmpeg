@@ -60,12 +60,13 @@ static int raw_encode(AVCodecContext *avctx, AVPacket *pkt,
 
     if ((ret = ff_alloc_packet2(avctx, pkt, ret, ret)) < 0)
         return ret;
-    if ((ret = av_image_copy_to_buffer(pkt->data, pkt->size,
+    ret = av_image_copy_to_buffer(pkt->data, pkt->size,
                                        (const uint8_t **)frame->data, frame->linesize,
                                        frame->format,
-                                       frame->width, frame->height, 1)) < 0)
+                                       frame->width, frame->height, 1);
+    if (ret < 0)
         return ret;
-
+    av_log(avctx, AV_LOG_ERROR, "mem size %d\n", ret);
     if(avctx->codec_tag == AV_RL32("yuv2") && ret > 0 &&
        frame->format   == AV_PIX_FMT_YUYV422) {
         int x;
