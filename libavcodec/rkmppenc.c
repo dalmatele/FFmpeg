@@ -537,8 +537,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //            (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
 //    av_log(avctx, AV_LOG_ERROR, "Size of frame %d\n", size);
     RK_U8 *buf_y = buf;
-    RK_U8 *buf_u = buf_y + hor_stride * ver_stride; // NOTE: diff from gen_yuv_image
-    RK_U8 *buf_v = buf_u + hor_stride * ver_stride / 4; // NOTE: diff from gen_yuv_image
+    RK_U8 *buf_u = buf_y + p->hor_stride * p->ver_stride; // NOTE: diff from gen_yuv_image
+    RK_U8 *buf_v = buf_u + p->hor_stride * p->ver_stride / 4; // NOTE: diff from gen_yuv_image
     //read data
     memcpy(buf_y, frame->data[0], frame->linesize[0] * p->height);
     memcpy(buf_u, frame->data[1], frame->linesize[1] * p->height);
