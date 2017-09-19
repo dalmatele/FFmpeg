@@ -573,11 +573,12 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             *got_packet = 1;
             pkt->flags |= AV_PKT_FLAG_KEY;
         }else{
+            av_log(avctx, AV_LOG_ERROR, "packet null \n");
             *got_packet = 0;
         }
         ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
         p->frame_count++;
-//        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
+        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
     }
     return 0;
 }
