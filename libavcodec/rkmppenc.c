@@ -103,6 +103,7 @@ static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
 
 static MppFrameFormat get_frame_format(AVCodecContext *avctx){
     av_log(NULL, AV_LOG_ERROR, "frame format %d\n", *(avctx->codec->pix_fmts));
+    av_log(NULL, AV_LOG_ERROR, "AV_PIX_FMT_NV21: %d\n", AV_PIX_FMT_NV21);
     switch(*(avctx->codec->pix_fmts)){
         case AV_PIX_FMT_NV21:
             return MPP_FMT_YUV420SP;
@@ -413,36 +414,6 @@ static MPP_RET mpi_init(AVCodecContext *avctx){
 }
 
 
-/**
- * ignore this, because FFMPEG helps us create file' headers
- * @param avctx
- * @return 
- */
-static int prepare(AVCodecContext *avctx){
-    MPP_RET ret;
-    MppApi *mpi;
-    MppCtx ctx;
-    MpiEncData *p = avctx->priv_data;
-    MppPacket packet = NULL;
-    mpi = p->mpi;
-    ctx = p->ctx;
-    ret = mpi->control(ctx, MPP_ENC_GET_EXTRA_INFO, &packet);
-    if (ret) {
-        return ret;
-    }
-    if (packet) {
-        void *ptr   = mpp_packet_get_pos(packet); //get position of packet
-        size_t len  = mpp_packet_get_length(packet);//get valid data length of packet
-
-        if (p->fp_output)
-            //write data is pointed by ptr, has size is 1 byte, we have len item, to file
-            //we write global info to file
-            //see more: https://stackoverflow.com/questions/17541153/how-to-find-sps-and-pps-string-in-h264-codec-from-mp4
-            fwrite(ptr, 1, len, p->fp_output);
-
-        packet = NULL;
-    }
-}
 
 /**
  * Init something before starting
