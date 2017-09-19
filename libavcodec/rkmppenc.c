@@ -453,7 +453,7 @@ static av_cold int encode_init(AVCodecContext *avctx){
     
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
     p->fmt          = get_frame_format(avctx);//input format
-    p->type         = MPP_VIDEO_CodingAutoDetect;//ffrkmpp_get_codingtype(avctx);//output coding
+    p->type         = MPP_VIDEO_CodingAVC;//ffrkmpp_get_codingtype(avctx);//output coding
     
     p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;    
 //    av_log(avctx, AV_LOG_INFO, "frame size %d\n", p->frame_size);
@@ -532,7 +532,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
     size = mpp_buffer_get_size(frm_buf_in);
-    av_log(avctx, AV_LOG_ERROR, "Size of buffer %d\n", size);
+    av_log(avctx, AV_LOG_ERROR, "linesize %d - %d - %d - %d\n", frame->linesize[0], frame->linesize[1], frame->linesize[2], frame->linesize[3]);
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
     av_log(avctx, AV_LOG_ERROR, "Size of frame %d\n", size);
