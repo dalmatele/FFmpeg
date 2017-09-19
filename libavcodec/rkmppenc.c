@@ -568,7 +568,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             void *ptr   = mpp_packet_get_pos(packet);
             size_t len  = mpp_packet_get_length(packet);
 //            av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
-            result = ff_alloc_packet2(avctx, pkt, len, 0);
+            ff_alloc_packet2(avctx, pkt, len, 0);
             
             memcpy(pkt->data, ptr, len);
             p->pkt_eos = mpp_packet_get_eos(packet);
