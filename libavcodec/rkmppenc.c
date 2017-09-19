@@ -203,7 +203,7 @@ static MPP_RET res_init(AVCodecContext *avctx){
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
-        av_log(avctx, AV_LOG_ERROR, "frame size %p\n", p->frame_size);
+        av_log(avctx, AV_LOG_ERROR, "frame size %d\n", p->frame_size);
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
         if (ret) {
             return ret;
@@ -465,9 +465,8 @@ static av_cold int encode_init(AVCodecContext *avctx){
     p->fmt          = get_frame_format(avctx);
     p->type         = ffrkmpp_get_codingtype(avctx);
     
-//    p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;
-    p->frame_size = av_image_get_buffer_size(p->frame->format,
-                                       p->frame->width, p->frame->height, 1);
+    p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;    
+    av_log(avctx, AV_LOG_INFO, "frame size %d\n", p->frame_size);
     p->packet_size  = p->width * p->height;
     p->mdinfo_size  = (((p->hor_stride + 255) & (~255)) / 16) * (p->ver_stride / 16) * 4;
     /*
