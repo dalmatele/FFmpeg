@@ -560,8 +560,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
         mpp_assert(packet_out == packet);
         if (packet) {
-            void *ptr   = mpp_packet_get_pos(packet_out);
-            size_t len  = mpp_packet_get_length(packet_out);
+            void *ptr   = mpp_packet_get_pos(packet);
+            size_t len  = mpp_packet_get_length(packet);
             av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
             ff_alloc_packet2(avctx, pkt, len, 0);
             
