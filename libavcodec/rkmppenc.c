@@ -36,6 +36,8 @@ const enum AVPixelFormat ff_rkmpp_pix_fmts[] = {
 
 #define MPI_ENC_TEST_SET_IDR_FRAME  0
 #define MPI_ENC_TEST_SET_OSD        0
+#define MPI_ENC_TEST_SET_IDR_FRAME  0
+#define MPI_ENC_TEST_SET_OSD        0
 
 typedef struct {
     // global flow control flag
@@ -395,6 +397,13 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
 
     /* gen and cfg osd plt */
     mpi_enc_gen_osd_plt(&p->osd_plt, p->plt_table);
+    #if MPI_ENC_TEST_SET_OSD
+        ret = mpi->control(ctx, MPP_ENC_SET_OSD_PLT_CFG, &p->osd_plt);
+        if (ret) {
+            mpp_err("mpi control enc set osd plt failed ret %d\n", ret);
+            goto RET;
+        }
+    #endif
     ret = mpp_frame_init(&p->frame);
     mpp_frame_set_width(p->frame, p->width);
     mpp_frame_set_height(p->frame, p->height);
@@ -546,9 +555,25 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     ret = mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
 //    av_log(avctx, AV_LOG_ERROR, "meta set packet result %d\n", ret);
     ret = mpp_task_meta_set_buffer(task, KEY_MOTION_INFO, md_info_buf);
-//    av_log(avctx, AV_LOG_ERROR, "meta set buffer result %d\n", ret);
-    ret= mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
-//    av_log(avctx, AV_LOG_ERROR, "gen osd result %d\n", ret);
+    #if MPI_ENC_TEST_SET_IDR_FRAME
+        if (p->frame_count && p->frame_count % (p->gop / 4) == 0) {
+            ret = mpi->control(ctx, MPP_ENC_SET_IDR_FRAME, NULL);
+            if (MPP_OK != ret) {
+                mpp_err("mpi control enc set idr frame failed\n");
+                goto RET;
+            }
+        }
+    #endif
+
+        /* gen and cfg osd plt */
+        ret = mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
+    #if MPI_ENC_TEST_SET_OSD
+        ret = mpi->control(ctx, MPP_ENC_SET_OSD_DATA_CFG, &osd_data);
+        if (MPP_OK != ret) {
+            mpp_err("mpi control enc set osd data failed\n");
+            goto RET;
+        }
+    #endif
     ret = mpi->enqueue(ctx, MPP_PORT_INPUT, task);
 //    av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d\n", ret);
     ret = mpi->poll(ctx, MPP_PORT_OUTPUT, MPP_POLL_BLOCK);
