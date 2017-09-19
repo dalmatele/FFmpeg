@@ -94,6 +94,7 @@ typedef struct {
 static MppCodingType ffrkmpp_get_codingtype(AVCodecContext *avctx)
 {
     av_log(NULL, AV_LOG_ERROR, "coding type %d\n", avctx->codec_id);
+    av_log(NULL, AV_LOG_ERROR, "coding type %d\n", AV_CODEC_ID_H264);
     switch (avctx->codec_id) {
     case AV_CODEC_ID_H264:  return MPP_VIDEO_CodingAVC;
     case AV_CODEC_ID_HEVC:  return MPP_VIDEO_CodingHEVC;
@@ -270,7 +271,7 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     prep_cfg->height        = p->height;
     prep_cfg->hor_stride    = p->hor_stride;
     prep_cfg->ver_stride    = p->ver_stride;
-    prep_cfg->format        = p->fmt;
+    prep_cfg->format        = p->fmt;//input format
     prep_cfg->rotation      = MPP_ENC_ROT_0;
     av_log(avctx, AV_LOG_ERROR, "mpi control init %p\n", prep_cfg);
     ret = mpi->control(ctx, MPP_ENC_SET_PREP_CFG, prep_cfg);
@@ -314,6 +315,7 @@ static MPP_RET init_mpp(AVCodecContext *avctx){
     av_log(avctx, AV_LOG_ERROR, "mpi_enc_test bps %d fps %d gop %d\n",
             rc_cfg->bps_target, rc_cfg->fps_out_num, rc_cfg->gop);
     codec_cfg->coding = p->type;
+    
     switch (codec_cfg->coding) {
     case MPP_VIDEO_CodingAVC : {
         codec_cfg->h264.change = MPP_ENC_H264_CFG_CHANGE_PROFILE |
@@ -427,18 +429,18 @@ static av_cold int encode_init(AVCodecContext *avctx){
     if(!p){
         return ret;
     }
-    av_log(avctx, AV_LOG_INFO, "Start initing rockchip\n");
+//    av_log(avctx, AV_LOG_INFO, "Start initing rockchip\n");
     p->width = avctx->width;
     p->height = avctx->height;
     
     p->hor_stride   = MPP_ALIGN(avctx->width, 16);
     
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
-    p->fmt          = get_frame_format(avctx);
-    p->type         = ffrkmpp_get_codingtype(avctx);
+    p->fmt          = get_frame_format(avctx);//input format
+    p->type         = MPP_VIDEO_CodingAVC//ffrkmpp_get_codingtype(avctx);//output coding
     
     p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;    
-    av_log(avctx, AV_LOG_INFO, "frame size %d\n", p->frame_size);
+//    av_log(avctx, AV_LOG_INFO, "frame size %d\n", p->frame_size);
     p->packet_size  = p->width * p->height;
     p->mdinfo_size  = (((p->hor_stride + 255) & (~255)) / 16) * (p->ver_stride / 16) * 4;
     /*
