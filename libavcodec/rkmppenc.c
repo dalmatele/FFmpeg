@@ -523,7 +523,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MpiEncData *p = avctx->priv_data;
     mpi = p->mpi;
     ctx = p->ctx;
-//    int size;
+    int size;
 //    p->i++;
     MppBuffer frm_buf_in  = p->frm_buf[0];
     MppBuffer pkt_buf_out = p->pkt_buf[0];
@@ -531,18 +531,18 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppBuffer osd_data_buf = p->osd_idx_buf[0];
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
-//    size = mpp_buffer_get_size(frm_buf_in);
-//    av_log(avctx, AV_LOG_ERROR, "linesize %d - %d - %d - %d\n", frame->linesize[0], frame->linesize[1], frame->linesize[2], frame->linesize[3]);
-//    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
-//            (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
-//    av_log(avctx, AV_LOG_ERROR, "Size of frame %d\n", size);
-    RK_U8 *buf_y = buf;
-    RK_U8 *buf_u = buf_y + p->hor_stride * p->ver_stride; // NOTE: diff from gen_yuv_image
-    RK_U8 *buf_v = buf_u + p->hor_stride * p->ver_stride / 4; // NOTE: diff from gen_yuv_image
-    //read data
-    memcpy(buf_y, frame->data[0], frame->linesize[0]);
-    memcpy(buf_u, frame->data[1], frame->linesize[1]);
-    memcpy(buf_v, frame->data[2], frame->linesize[2]);
+    size = mpp_buffer_get_size(frm_buf_in);
+    av_log(avctx, AV_LOG_ERROR, "bus size %d\n", size);
+    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
+            (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
+    av_log(avctx, AV_LOG_ERROR, "read size %d\n", size);
+//    RK_U8 *buf_y = buf;
+//    RK_U8 *buf_u = buf_y + p->hor_stride * p->ver_stride; // NOTE: diff from gen_yuv_image
+//    RK_U8 *buf_v = buf_u + p->hor_stride * p->ver_stride / 4; // NOTE: diff from gen_yuv_image
+//    //read data
+//    memcpy(buf_y, frame->data[0], frame->linesize[0]);
+//    memcpy(buf_u, frame->data[1], frame->linesize[1]);
+//    memcpy(buf_v, frame->data[2], frame->linesize[2]);
     
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     
@@ -591,7 +591,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
         mpp_assert(packet_out == packet);
         if (packet) {
-            void *ptr   = mpp_packet_get_pos(packet);
+            void *ptr   = mpp_packet_get_pos(packet);//<--wrong?
             size_t len  = mpp_packet_get_length(packet);
             p->pkt_eos = mpp_packet_get_eos(packet);
             av_log(avctx, AV_LOG_ERROR, "Mem size %d \n", len);
