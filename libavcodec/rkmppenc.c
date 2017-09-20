@@ -216,7 +216,7 @@ static MPP_RET res_init(AVCodecContext *avctx){
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
-        av_log(avctx, AV_LOG_ERROR, "frame size %d\n", p->frame_size);
+        av_log(avctx, AV_LOG_ERROR, "frame size %ul\n", p->frame_size);
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
         if (ret) {
             return ret;
@@ -503,7 +503,7 @@ static av_cold int encode_close(AVCodecContext *avctx){
         return ret;
 }
 
-static int get_raw_data(AVCodecContext *avctx, AVFrame *frame, AVPacket *pkt){
+static int get_raw_data(AVCodecContext *avctx, const AVFrame *frame, AVPacket *pkt){
     int ret = av_image_get_buffer_size(frame->format,
                                        frame->width, frame->height, 1);
 
@@ -558,7 +558,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MpiEncData *p = avctx->priv_data;
     mpi = p->mpi;
     ctx = p->ctx;
-    int size;
+//    int size;
 //    p->i++;
     MppBuffer frm_buf_in  = p->frm_buf[0];
     MppBuffer pkt_buf_out = p->pkt_buf[0];
