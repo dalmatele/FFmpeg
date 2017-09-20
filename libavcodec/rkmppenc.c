@@ -570,7 +570,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     
     
     //read raw data
-    int ret = av_image_get_buffer_size(frame->format,
+    ret = av_image_get_buffer_size(frame->format,
                                        frame->width, frame->height, 1);
 
     if (ret < 0)
