@@ -570,7 +570,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
     size = mpp_buffer_get_size(frm_buf_in);
-    av_log(avctx, AV_LOG_ERROR, "buf size %p\n", size);
+    av_log(avctx, AV_LOG_ERROR, "buf size %d\n", size);
 //    http://www.ffmpeg-archive.org/How-to-get-raw-frame-data-from-AVFrame-data-and-AVFrame-linesize-without-specifying-the-pixel-format-td4661827.html
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
@@ -630,9 +630,9 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         return 0;
     }
     if (task) {
-//        MppFrame packet_out = NULL;
-        ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet);
-//        mpp_assert(packet_out == packet);
+        MppFrame packet_out = NULL;
+        ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
+        mpp_assert(packet_out == packet);
         if (packet) {
             void *ptr   = mpp_packet_get_pos(packet);//<--wrong:000000?
             size_t len  = mpp_packet_get_length(packet);
@@ -657,10 +657,13 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             av_log(avctx, AV_LOG_ERROR, "packet null \n");
             *got_packet = 0;
         }
-        ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
+        
         p->frame_count++;
 //        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
+    }else{
+        *got_packet = 0;
     }
+    ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
     return 0;
 }
 
