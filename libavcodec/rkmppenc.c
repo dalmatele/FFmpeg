@@ -584,14 +584,14 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //    memcpy(buf, frame->data[0], frame->linesize[0]);
     // end get data from frame
     av_log(avctx, AV_LOG_ERROR, "read size %d\n", size);
-    for(i = 0; i < 16; i++){
-        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)frm_buf_in + i));
-        if((i %16 ) == 0){
-            av_log(avctx, AV_LOG_ERROR, "\n");
-        }
-    }
-    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
-    mpp_frame_set_buffer(p->frame, frm_buf_in);//<-- this null
+//    for(i = 0; i < 16; i++){
+//        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)frm_buf_in + i));
+//        if((i %16 ) == 0){
+//            av_log(avctx, AV_LOG_ERROR, "\n");
+//        }
+//    }
+//    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
+    mpp_frame_set_buffer(p->frame, buf);//<-- this null
     
     mpp_frame_set_eos(p->frame, p->frm_eos);
 //    av_log(avctx, AV_LOG_INFO, "buffer out %d\n", mpp_buffer_get_size(pkt_buf_out));
