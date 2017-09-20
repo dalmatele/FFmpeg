@@ -642,7 +642,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             for(i = 0; i < len; i++){
                 av_log(avctx, AV_LOG_ERROR, "%d ", *((int*)ptr));
                 if((i %16 ) == 0){
-                    av_log(avctx, AV_LOG_ERROR, "\n", *((int*)ptr));
+                    av_log(avctx, AV_LOG_ERROR, "\n");
                 }
             }
             av_log(avctx, AV_LOG_ERROR, "=======================\n");
