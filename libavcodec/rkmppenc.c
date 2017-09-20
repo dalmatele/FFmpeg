@@ -539,6 +539,7 @@ static int get_raw_data(AVCodecContext *avctx, const AVFrame *frame, AVPacket *p
 
 
 
+
 /**
  * Encode data
  * @param avctx
@@ -553,6 +554,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppPacket packet = NULL;
     MppApi *mpi;
     MppCtx ctx;
+    int i;
+    int size;
     //encode packet
     MppTask task = NULL;
     MpiEncData *p = avctx->priv_data;
@@ -568,8 +571,17 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
 //    size = mpp_buffer_get_size(frm_buf_in);
     av_log(avctx, AV_LOG_ERROR, "frame pointer %p\n", frame->data);
-    av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
+//    http://www.ffmpeg-archive.org/How-to-get-raw-frame-data-from-AVFrame-data-and-AVFrame-linesize-without-specifying-the-pixel-format-td4661827.html
+    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
+    for(i = 0; i < size; i++){
+        av_log(avctx, AV_LOG_ERROR, "read size %d", *(buf + i));
+    }
+    av_log(avctx, AV_LOG_ERROR, "\n");
+    ///get data from frame
+    //YUV = data[0] = y, data[1] = u, data[2] = v, linesize[i] la so byte can doc cho mot dong
+//    memcpy(buf, frame->data[0], frame->linesize[0]);
+    // end get data from frame
 //    av_log(avctx, AV_LOG_ERROR, "read size %d\n", size);
 
 //    RK_U8 *buf_y = buf;
