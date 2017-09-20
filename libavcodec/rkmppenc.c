@@ -566,49 +566,10 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppBuffer osd_data_buf = p->osd_idx_buf[0];
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
-//    get_raw_data(avctx, frame, pkt);
-    
-    
-    //read raw data
-    ret = av_image_get_buffer_size(frame->format,
-                                       frame->width, frame->height, 1);
-
-    if (ret < 0)
-        return ret;
-
-    if ((ret = ff_alloc_packet2(avctx, pkt, ret, ret)) < 0)
-        return ret;
-    ret = av_image_copy_to_buffer(pkt->data, pkt->size,
-                                       (const uint8_t **)frame->data, frame->linesize,
-                                       frame->format,
-                                       frame->width, frame->height, 1);
-    if (ret < 0)
-        return ret;
-    av_log(avctx, AV_LOG_ERROR, "mem size raw %d\n", ret);
-    if(avctx->codec_tag == AV_RL32("yuv2") && ret > 0 &&
-       frame->format   == AV_PIX_FMT_YUYV422) {
-        int x;
-        for(x = 1; x < frame->height*frame->width*2; x += 2)
-            pkt->data[x] ^= 0x80;
-    } else if (avctx->codec_tag == AV_RL32("b64a") && ret > 0 &&
-        frame->format == AV_PIX_FMT_RGBA64BE) {
-        uint64_t v;
-        int x;
-        for (x = 0; x < frame->height * frame->width; x++) {
-            v = AV_RB64(&pkt->data[8 * x]);
-            AV_WB64(&pkt->data[8 * x], v << 48 | v >> 16);
-        }
-    }
-    
-    
-    
-    
-    av_log(avctx, AV_LOG_ERROR, "pkt raw size %d\n", pkt->size);
-    memcpy(buf, pkt->data, pkt->size);
-//    size = mpp_buffer_get_size(frm_buf_in);
-//    av_log(avctx, AV_LOG_ERROR, "bus size %d\n", size);
-//    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
-//            (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
+    size = mpp_buffer_get_size(frm_buf_in);
+    av_log(avctx, AV_LOG_ERROR, "frame pointer %p\n", frame->data);
+    size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
+            (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
 //    av_log(avctx, AV_LOG_ERROR, "read size %d\n", size);
 
 //    RK_U8 *buf_y = buf;
@@ -626,41 +587,40 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //    mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
-    
+    if(ret > 0){
+        av_log(avctx, AV_LOG_ERROR, "No task to process %p\n", ret);
+        *got_packet = 0;
+        return 0;
+    }
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
-    if(task == NULL){
-        av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d task %p\n", ret, task);
+    if(task == NULL || ret > 0){
+        av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d task %p\n", ret);
     }
     ret = mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
 //    av_log(avctx, AV_LOG_ERROR, "met set frame result %d\n", ret);
     ret = mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
 //    av_log(avctx, AV_LOG_ERROR, "meta set packet result %d\n", ret);
     ret = mpp_task_meta_set_buffer(task, KEY_MOTION_INFO, md_info_buf);
-    #if MPI_ENC_TEST_SET_IDR_FRAME
-        if (p->frame_count && p->frame_count % (p->gop / 4) == 0) {
-            ret = mpi->control(ctx, MPP_ENC_SET_IDR_FRAME, NULL);
-            if (MPP_OK != ret) {
-                mpp_err("mpi control enc set idr frame failed\n");
-                goto RET;
-            }
-        }
-    #endif
-
-        /* gen and cfg osd plt */
-        ret = mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
-    #if MPI_ENC_TEST_SET_OSD
-        ret = mpi->control(ctx, MPP_ENC_SET_OSD_DATA_CFG, &osd_data);
-        if (MPP_OK != ret) {
-            mpp_err("mpi control enc set osd data failed\n");
-            goto RET;
-        }
-    #endif
+    /* gen and cfg osd plt */
+    ret = mpi_enc_gen_osd_data(&osd_data, osd_data_buf, p->frame_count);
     ret = mpi->enqueue(ctx, MPP_PORT_INPUT, task);
-//    av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d\n", ret);
+    if(ret > 0){
+        av_log(avctx, AV_LOG_ERROR, "mpi enqueue result %d\n", ret);
+        *got_packet = 0;
+        return 0;
+    }
     ret = mpi->poll(ctx, MPP_PORT_OUTPUT, MPP_POLL_BLOCK);
-//    av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
+    if(ret > 0){
+        av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
+        *got_packet = 0;
+        return 0;
+    }   
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
-//    av_log(avctx, AV_LOG_ERROR, "mpi dequeue2 result %d\n", ret);
+    if (ret || NULL == task) {
+        av_log(avctx, AV_LOG_ERROR, "mpp task output dequeue failed ret %d\n", ret);
+        *got_packet = 0;
+        return 0;
+    }
     if (task) {
         MppFrame packet_out = NULL;
         ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
