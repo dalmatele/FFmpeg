@@ -65,7 +65,7 @@ static int raw_encode(AVCodecContext *avctx, AVPacket *pkt,
                                        (const uint8_t **)frame->data, frame->linesize,
                                        frame->format,
                                        frame->width, frame->height, 1);
-    for(i = 0; i < len; i++){
+    for(i = 0; i < pkt->size; i++){
         av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)pkt->data + i));
         if((i %16 ) == 0){
             av_log(avctx, AV_LOG_ERROR, "\n");
