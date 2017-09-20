@@ -574,10 +574,10 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //    http://www.ffmpeg-archive.org/How-to-get-raw-frame-data-from-AVFrame-data-and-AVFrame-linesize-without-specifying-the-pixel-format-td4661827.html
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
-    for(i = 1000; i < 1500; i++){
-        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)buf + i));       
-    }
-    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
+//    for(i = 1000; i < 1500; i++){
+//        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)buf + i));       
+//    }
+//    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
     
     ///get data from frame
     //YUV = data[0] = y, data[1] = u, data[2] = v, linesize[i] la so byte can doc cho mot dong
@@ -644,13 +644,13 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             p->pkt_eos = mpp_packet_get_eos(packet);
 //            av_log(avctx, AV_LOG_ERROR, "Mem size %lu \n", len);
             ff_alloc_packet2(avctx, pkt, len, 0);
-//            for(i = 0; i < len; i++){
-//                av_log(avctx, AV_LOG_ERROR, "%d ", *((int*)ptr));
-//                if((i %16 ) == 0){
-//                    av_log(avctx, AV_LOG_ERROR, "\n");
-//                }
-//            }
-//            av_log(avctx, AV_LOG_ERROR, "=======================\n");
+            for(i = 0; i < len; i++){
+                av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)ptr + i));
+                if((i %16 ) == 0){
+                    av_log(avctx, AV_LOG_ERROR, "\n");
+                }
+            }
+            av_log(avctx, AV_LOG_ERROR, "\n=======================\n");
             memcpy(pkt->data, ptr, len);
             
             ret = mpp_packet_deinit(&packet);
