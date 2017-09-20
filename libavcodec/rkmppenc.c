@@ -574,10 +574,10 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //    http://www.ffmpeg-archive.org/How-to-get-raw-frame-data-from-AVFrame-data-and-AVFrame-linesize-without-specifying-the-pixel-format-td4661827.html
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
-    for(i = 0; i < 16; i++){
+    for(i = 300; i < 330; i++){
         av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)buf + i));       
     }
-    av_log(avctx, AV_LOG_ERROR, "=======================\n");
+    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
     
     ///get data from frame
     //YUV = data[0] = y, data[1] = u, data[2] = v, linesize[i] la so byte can doc cho mot dong
