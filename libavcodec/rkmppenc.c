@@ -578,7 +578,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     //YUV = data[0] = y, data[1] = u, data[2] = v, linesize[i] la so byte can doc cho mot dong
 //    memcpy(buf, frame->data[0], frame->linesize[0]);
     // end get data from frame
-//    av_log(avctx, AV_LOG_ERROR, "read size %d\n", size);
+    av_log(avctx, AV_LOG_ERROR, "read size %d\n", size);
 
 //    RK_U8 *buf_y = buf;
 //    RK_U8 *buf_u = buf_y + p->hor_stride * p->ver_stride; // NOTE: diff from gen_yuv_image
