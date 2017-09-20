@@ -569,8 +569,8 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppBuffer osd_data_buf = p->osd_idx_buf[0];
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
-//    size = mpp_buffer_get_size(frm_buf_in);
-    av_log(avctx, AV_LOG_ERROR, "frame pointer %p\n", frame->data);
+    size = mpp_buffer_get_size(frm_buf_in);
+    av_log(avctx, AV_LOG_ERROR, "buf size %p\n", size);
 //    http://www.ffmpeg-archive.org/How-to-get-raw-frame-data-from-AVFrame-data-and-AVFrame-linesize-without-specifying-the-pixel-format-td4661827.html
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
@@ -637,9 +637,15 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             void *ptr   = mpp_packet_get_pos(packet);//<--wrong?
             size_t len  = mpp_packet_get_length(packet);
             p->pkt_eos = mpp_packet_get_eos(packet);
-            av_log(avctx, AV_LOG_ERROR, "Mem size %lu \n", len);
+//            av_log(avctx, AV_LOG_ERROR, "Mem size %lu \n", len);
             ff_alloc_packet2(avctx, pkt, len, 0);
-            
+            for(i = 0; i < len; i++){
+                av_log(avctx, AV_LOG_ERROR, "%d ", *((int*)ptr));
+                if((i %16 ) == 0){
+                    av_log(avctx, AV_LOG_ERROR, "\n", *((int*)ptr));
+                }
+            }
+            av_log(avctx, AV_LOG_ERROR, "=======================\n");
             memcpy(pkt->data, ptr, len);
             
             ret = mpp_packet_deinit(&packet);
