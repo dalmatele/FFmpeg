@@ -453,9 +453,10 @@ static av_cold int encode_init(AVCodecContext *avctx){
     
     p->ver_stride   = MPP_ALIGN(avctx->height, 16);
     p->fmt          = MPP_FMT_YUV420P;//get_frame_format(avctx);//input format
-    p->type         = MPP_VIDEO_CodingWMV;//ffrkmpp_get_codingtype(avctx);//output coding
+    p->type         = MPP_VIDEO_CodingMJPEG;//ffrkmpp_get_codingtype(avctx);//output coding: MPP_VIDEO_CodingMJPEG, MPP_VIDEO_CodingAVC
     
-    p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2;    
+//    p->frame_size   = p->hor_stride * p->hor_stride * 3 / 2; 
+    p->frame_size = av_image_get_buffer_size(avctx->codec->pix_fmts, avctx->width, avctx->height, 1);
 //    av_log(avctx, AV_LOG_INFO, "frame size %d\n", p->frame_size);
     p->packet_size  = p->width * p->height;
     p->mdinfo_size  = (((p->hor_stride + 255) & (~255)) / 16) * (p->ver_stride / 16) * 4;
