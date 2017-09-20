@@ -586,10 +586,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     av_log(avctx, AV_LOG_ERROR, "read size %d\n", size);
     
     
-    for(i = 20; i < 40; i++){
-        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)frm_buf_in + i));
-    }
-    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
+    
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     
     mpp_frame_set_eos(p->frame, p->frm_eos);
