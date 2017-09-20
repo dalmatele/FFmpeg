@@ -591,7 +591,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         }
     }
     av_log(avctx, AV_LOG_ERROR, "\n===============\n");
-    mpp_frame_set_buffer(p->frame, frm_buf_in);
+    mpp_frame_set_buffer(p->frame, frm_buf_in);//<-- this null
     
     mpp_frame_set_eos(p->frame, p->frm_eos);
 //    av_log(avctx, AV_LOG_INFO, "buffer out %d\n", mpp_buffer_get_size(pkt_buf_out));
