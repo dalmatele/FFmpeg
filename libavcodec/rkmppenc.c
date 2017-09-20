@@ -518,7 +518,7 @@ static int get_raw_data(AVCodecContext *avctx, AVFrame *frame, AVPacket *pkt){
                                        frame->width, frame->height, 1);
     if (ret < 0)
         return ret;
-    av_log(avctx, AV_LOG_ERROR, "mem size %d\n", ret);
+    av_log(avctx, AV_LOG_ERROR, "mem size raw %d\n", ret);
     if(avctx->codec_tag == AV_RL32("yuv2") && ret > 0 &&
        frame->format   == AV_PIX_FMT_YUYV422) {
         int x;
@@ -567,6 +567,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
     get_raw_data(avctx, frame, pkt);
+    av_log(avctx, AV_LOG_ERROR, "pkt size %d\n", pkt->size);
     memcpy(buf, pkt->data, pkt->size);
 //    size = mpp_buffer_get_size(frm_buf_in);
 //    av_log(avctx, AV_LOG_ERROR, "bus size %d\n", size);
@@ -585,7 +586,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_frame_set_buffer(p->frame, frm_buf_in);
     
     mpp_frame_set_eos(p->frame, p->frm_eos);
-    av_log(avctx, AV_LOG_INFO, "buffer out %d\n", mpp_buffer_get_size(pkt_buf_out));
+//    av_log(avctx, AV_LOG_INFO, "buffer out %d\n", mpp_buffer_get_size(pkt_buf_out));
 //    mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
@@ -648,7 +649,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         }
         ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
         p->frame_count++;
-        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
+//        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
     }
     return 0;
 }
