@@ -575,7 +575,10 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
     for(i = 0; i < size; i++){
-        av_log(avctx, AV_LOG_ERROR, "%d", *((uint8_t*)buf + i));
+        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)buf + i));
+        if((i % 8) == 0){
+            av_log(avctx, AV_LOG_ERROR, "\n");
+        }
     }
     av_log(avctx, AV_LOG_ERROR, "\n");
     ///get data from frame
