@@ -580,7 +580,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             av_log(avctx, AV_LOG_ERROR, "\n");
         }
     }
-    av_log(avctx, AV_LOG_ERROR, "\n");
+    av_log(avctx, AV_LOG_ERROR, "------------------\n");
     ///get data from frame
     //YUV = data[0] = y, data[1] = u, data[2] = v, linesize[i] la so byte can doc cho mot dong
 //    memcpy(buf, frame->data[0], frame->linesize[0]);
