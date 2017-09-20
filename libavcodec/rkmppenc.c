@@ -575,7 +575,7 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
             (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
     for(i = 0; i < size; i++){
-        av_log(avctx, AV_LOG_ERROR, "read size %d", *(buf + i));
+        println("%d", *(buf + i));
     }
     av_log(avctx, AV_LOG_ERROR, "\n");
     ///get data from frame
@@ -600,13 +600,13 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
     ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
     if(ret > 0){
-        av_log(avctx, AV_LOG_ERROR, "No task to process %p\n", ret);
+        av_log(avctx, AV_LOG_ERROR, "No task to process %d\n", ret);
         *got_packet = 0;
         return 0;
     }
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
     if(task == NULL || ret > 0){
-        av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d task %p\n", ret);
+        av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d\n", ret);
     }
     ret = mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
 //    av_log(avctx, AV_LOG_ERROR, "met set frame result %d\n", ret);
