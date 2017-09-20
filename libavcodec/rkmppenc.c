@@ -594,12 +594,12 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
 //    av_log(avctx, AV_LOG_INFO, "buffer out %d\n", mpp_buffer_get_size(pkt_buf_out));
 //    mpp_assert(pkt_buf_out);
     mpp_packet_init_with_buffer(&packet, pkt_buf_out);
-    ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
-    if(ret > 0){
-        av_log(avctx, AV_LOG_ERROR, "No task to process %d\n", ret);
-        *got_packet = 0;
-        return 0;
-    }
+//    ret = mpi->poll(ctx, MPP_PORT_INPUT, MPP_POLL_BLOCK);
+//    if(ret > 0){
+//        av_log(avctx, AV_LOG_ERROR, "No task to process %d\n", ret);
+//        *got_packet = 0;
+//        return 0;
+//    }
     ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
     if(task == NULL || ret > 0){
         av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d\n", ret);
@@ -617,12 +617,12 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         *got_packet = 0;
         return 0;
     }
-    ret = mpi->poll(ctx, MPP_PORT_OUTPUT, MPP_POLL_BLOCK);
-    if(ret > 0){
-        av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
-        *got_packet = 0;
-        return 0;
-    }   
+//    ret = mpi->poll(ctx, MPP_PORT_OUTPUT, MPP_POLL_BLOCK);
+//    if(ret > 0){
+//        av_log(avctx, AV_LOG_ERROR, "mpi poll2 result %d\n", ret);
+//        *got_packet = 0;
+//        return 0;
+//    }   
     ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
     if (ret || NULL == task) {
         av_log(avctx, AV_LOG_ERROR, "mpp task output dequeue failed ret %d\n", ret);
