@@ -630,11 +630,11 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         return 0;
     }
     if (task) {
-        MppFrame packet_out = NULL;
-        ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
-        mpp_assert(packet_out == packet);
+//        MppFrame packet_out = NULL;
+        ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet);
+//        mpp_assert(packet_out == packet);
         if (packet) {
-            void *ptr   = mpp_packet_get_pos(packet);//<--wrong?
+            void *ptr   = mpp_packet_get_pos(packet);//<--wrong:000000?
             size_t len  = mpp_packet_get_length(packet);
             p->pkt_eos = mpp_packet_get_eos(packet);
 //            av_log(avctx, AV_LOG_ERROR, "Mem size %lu \n", len);
