@@ -216,7 +216,7 @@ static MPP_RET res_init(AVCodecContext *avctx){
     mpp_buffer_group_get_internal(&p->pkt_grp, MPP_BUFFER_TYPE_ION);
     for (i = 0; i < MPI_ENC_IO_COUNT; i++) {
         //link frm_buff to frm_grp buffer
-        av_log(avctx, AV_LOG_ERROR, "frame size %ul\n", p->frame_size);
+        av_log(avctx, AV_LOG_ERROR, "frame size %lu\n", p->frame_size);
         ret = mpp_buffer_get(p->frm_grp, &p->frm_buf[i], p->frame_size);
         if (ret) {
             return ret;
@@ -566,8 +566,44 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     MppBuffer osd_data_buf = p->osd_idx_buf[0];
     MppEncOSDData osd_data;
     void *buf = mpp_buffer_get_ptr(frm_buf_in);//buff will contain input data
-    get_raw_data(avctx, frame, pkt);
-    av_log(avctx, AV_LOG_ERROR, "pkt size %d\n", pkt->size);
+//    get_raw_data(avctx, frame, pkt);
+    
+    
+    //read raw data
+    int ret = av_image_get_buffer_size(frame->format,
+                                       frame->width, frame->height, 1);
+
+    if (ret < 0)
+        return ret;
+
+    if ((ret = ff_alloc_packet2(avctx, pkt, ret, ret)) < 0)
+        return ret;
+    ret = av_image_copy_to_buffer(pkt->data, pkt->size,
+                                       (const uint8_t **)frame->data, frame->linesize,
+                                       frame->format,
+                                       frame->width, frame->height, 1);
+    if (ret < 0)
+        return ret;
+    av_log(avctx, AV_LOG_ERROR, "mem size raw %d\n", ret);
+    if(avctx->codec_tag == AV_RL32("yuv2") && ret > 0 &&
+       frame->format   == AV_PIX_FMT_YUYV422) {
+        int x;
+        for(x = 1; x < frame->height*frame->width*2; x += 2)
+            pkt->data[x] ^= 0x80;
+    } else if (avctx->codec_tag == AV_RL32("b64a") && ret > 0 &&
+        frame->format == AV_PIX_FMT_RGBA64BE) {
+        uint64_t v;
+        int x;
+        for (x = 0; x < frame->height * frame->width; x++) {
+            v = AV_RB64(&pkt->data[8 * x]);
+            AV_WB64(&pkt->data[8 * x], v << 48 | v >> 16);
+        }
+    }
+    
+    
+    
+    
+    av_log(avctx, AV_LOG_ERROR, "pkt raw size %d\n", pkt->size);
     memcpy(buf, pkt->data, pkt->size);
 //    size = mpp_buffer_get_size(frm_buf_in);
 //    av_log(avctx, AV_LOG_ERROR, "bus size %d\n", size);
