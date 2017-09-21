@@ -573,11 +573,11 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     av_log(avctx, AV_LOG_ERROR, "buf size %d\n", size);
 //    http://www.ffmpeg-archive.org/How-to-get-raw-frame-data-from-AVFrame-data-and-AVFrame-linesize-without-specifying-the-pixel-format-td4661827.html
     size = av_image_copy_to_buffer(buf, mpp_buffer_get_size(frm_buf_in), 
-            (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);
-//    for(i = 1000; i < 1500; i++){
-//        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)buf + i));       
-//    }
-//    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
+            (const uint8_t **)frame->data, frame->linesize, frame->format,  frame->width, frame->height, 1);    
+    for(i = 1000; i < 1500; i++){
+        av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)buf + i));       
+    }
+    av_log(avctx, AV_LOG_ERROR, "\n===============\n");
     
     ///get data from frame
     //YUV = data[0] = y, data[1] = u, data[2] = v, linesize[i] la so byte can doc cho mot dong
@@ -599,10 +599,18 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         *got_packet = 0;
         return 0;
     }
-    ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
-    if(task == NULL || ret > 0){
-        av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d\n", ret);
-    }
+    do{
+        ret = mpi->dequeue(ctx, MPP_PORT_INPUT, &task);
+        if(ret > 0){
+            av_log(avctx, AV_LOG_ERROR, "mpp task input dequeue failed ret %d\n", ret);
+        }
+        if(task == NULL){
+            av_log(avctx, AV_LOG_ERROR, "mpp input failed, try again\n");
+        }else{
+            break;
+        }
+    }while (1);
+    
     ret = mpp_task_meta_set_frame (task, KEY_INPUT_FRAME,  p->frame);
 //    av_log(avctx, AV_LOG_ERROR, "met set frame result %d\n", ret);
     ret = mpp_task_meta_set_packet(task, KEY_OUTPUT_PACKET, packet);
@@ -622,47 +630,52 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
         *got_packet = 0;
         return 0;
     }   
-    ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
-    if (ret || NULL == task) {
-        av_log(avctx, AV_LOG_ERROR, "mpp task output dequeue failed ret %d\n", ret);
-        *got_packet = 0;
-        return 0;
-    }
-    if (task) {
-        MppFrame packet_out = NULL;
-        ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
-        mpp_assert(packet_out == packet);
-        if (packet) {
-            void *ptr   = mpp_packet_get_pos(packet);//<--wrong:000000?
-            size_t len  = mpp_packet_get_length(packet);
-            p->pkt_eos = mpp_packet_get_eos(packet);
-//            av_log(avctx, AV_LOG_ERROR, "Mem size %lu \n", len);
-            ff_alloc_packet2(avctx, pkt, len, 0);
-            for(i = 0; i < 16; i++){
-                av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)ptr + i));
-                if((i %16 ) == 0){
-                    av_log(avctx, AV_LOG_ERROR, "\n");
-                }
-            }
-            av_log(avctx, AV_LOG_ERROR, "\n=======================\n");
-            memcpy(pkt->data, ptr, len);
-            
-            ret = mpp_packet_deinit(&packet);
-//            av_log(avctx, AV_LOG_ERROR, "Encode frame %d size %d \n", p->frame_count, len);
-            //get packet
-            *got_packet = 1;
-            pkt->flags |= AV_PKT_FLAG_KEY;
-        }else{
-            av_log(avctx, AV_LOG_ERROR, "packet null \n");
+    do{
+        ret = mpi->dequeue(ctx, MPP_PORT_OUTPUT, &task);
+        if (ret > 0) {
+            av_log(avctx, AV_LOG_ERROR, "mpp task output dequeue failed ret %d\n", ret);
             *got_packet = 0;
+            return 0;
         }
-        
-        p->frame_count++;
-//        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
-    }else{
-        *got_packet = 0;
-    }
-    ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
+        if (task) {
+            MppFrame packet_out = NULL;
+            ret = mpp_task_meta_get_packet(task, KEY_OUTPUT_PACKET, &packet_out);
+            mpp_assert(packet_out == packet);
+            if (packet) {
+                void *ptr   = mpp_packet_get_pos(packet);//<--wrong:000000?
+                size_t len  = mpp_packet_get_length(packet);
+                p->pkt_eos = mpp_packet_get_eos(packet);
+    //            av_log(avctx, AV_LOG_ERROR, "Mem size %lu \n", len);
+                ff_alloc_packet2(avctx, pkt, len, 0);
+                for(i = 0; i < 16; i++){
+                    av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)ptr + i));
+                    if((i %16 ) == 0){
+                        av_log(avctx, AV_LOG_ERROR, "\n");
+                    }
+                }
+                av_log(avctx, AV_LOG_ERROR, "\n=======================\n");
+                memcpy(pkt->data, ptr, len);
+
+                ret = mpp_packet_deinit(&packet);
+    //            av_log(avctx, AV_LOG_ERROR, "Encode frame %d size %d \n", p->frame_count, len);
+                //get packet
+                *got_packet = 1;
+                pkt->flags |= AV_PKT_FLAG_KEY;
+            }else{
+                av_log(avctx, AV_LOG_ERROR, "packet null \n");
+                *got_packet = 0;
+            }
+
+            p->frame_count++;
+    //        av_log(avctx, AV_LOG_ERROR, "Frame count: %d \n", p->frame_count);
+            ret = mpi->enqueue(ctx, MPP_PORT_OUTPUT, task);
+            break;
+        }
+    }while(1);
+    
+    
+    
+    
     return 0;
 }
 
