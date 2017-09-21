@@ -646,13 +646,13 @@ static int encode_frame(AVCodecContext *avctx, AVPacket *pkt,
                 p->pkt_eos = mpp_packet_get_eos(packet);
     //            av_log(avctx, AV_LOG_ERROR, "Mem size %lu \n", len);
                 ff_alloc_packet2(avctx, pkt, len, 0);
-                for(i = 0; i < 16; i++){
-                    av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)ptr + i));
-                    if((i %16 ) == 0){
-                        av_log(avctx, AV_LOG_ERROR, "\n");
-                    }
-                }
-                av_log(avctx, AV_LOG_ERROR, "\n=======================\n");
+//                for(i = 0; i < 16; i++){
+//                    av_log(avctx, AV_LOG_ERROR, "%d ", *((uint8_t*)ptr + i));
+//                    if((i %16 ) == 0){
+//                        av_log(avctx, AV_LOG_ERROR, "\n");
+//                    }
+//                }
+//                av_log(avctx, AV_LOG_ERROR, "\n=======================\n");
                 memcpy(pkt->data, ptr, len);
 
                 ret = mpp_packet_deinit(&packet);
