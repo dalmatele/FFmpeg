@@ -369,6 +369,11 @@ int avio_feof(AVIOContext *s)
     return s->eof_reached;
 }
 
+/**
+ * Write litle endian 32-bit value
+ * @param s
+ * @param val
+ */
 void avio_wl32(AVIOContext *s, unsigned int val)
 {
     avio_w8(s, (uint8_t) val       );
@@ -376,7 +381,11 @@ void avio_wl32(AVIOContext *s, unsigned int val)
     avio_w8(s, (uint8_t)(val >> 16));
     avio_w8(s,           val >> 24 );
 }
-
+/**
+ * write a Big endian 32-bit value
+ * @param s
+ * @param val
+ */
 void avio_wb32(AVIOContext *s, unsigned int val)
 {
     avio_w8(s,           val >> 24 );

@@ -628,8 +628,7 @@ static int cbs_h2645_split_fragment(CodedBitstreamContext *ctx,
                 return AVERROR_INVALIDDATA;
             bytestream2_skip(&gbc, size);
         }
-        end = bytestream2_tell(&gbc);
-
+        end = bytestream2_tell(&gbc);       
         err = ff_h2645_packet_split(&priv->read_packet,
                                     frag->data + start, end - start,
                                     ctx->log_ctx, 1, 2, AV_CODEC_ID_H264, 1, 1);
@@ -652,8 +651,7 @@ static int cbs_h2645_split_fragment(CodedBitstreamContext *ctx,
                 return AVERROR_INVALIDDATA;
             bytestream2_skip(&gbc, size);
         }
-        end = bytestream2_tell(&gbc);
-
+        end = bytestream2_tell(&gbc);        
         err = ff_h2645_packet_split(&priv->read_packet,
                                     frag->data + start, end - start,
                                     ctx->log_ctx, 1, 2, AV_CODEC_ID_H264, 1, 1);

@@ -4230,7 +4230,7 @@ static int mov_write_tfhd_tag(AVIOContext *pb, MOVMuxContext *mov,
         avio_wb32(pb, track->default_duration);
     }
     if (flags & MOV_TFHD_DEFAULT_SIZE) {
-        track->default_size = track->entry ? track->cluster[0].size : 1;
+        track->default_size = track->entry ? track->cluster[0].size : 1;//get size of the first sample
         avio_wb32(pb, track->default_size);
     } else
         track->default_size = -1;
@@ -5233,17 +5233,19 @@ static int mov_flush_fragment(AVFormatContext *s, int force)
         track->entries_flushed = 0;
         track->end_reliable = 0;
         if (!mov->frag_interleave) {
+            av_log(s, AV_LOG_ERROR, "no frag_interleave.\n");
             if (!track->mdat_buf)
                 continue;
             buf_size = avio_close_dyn_buf(track->mdat_buf, &buf);
             track->mdat_buf = NULL;
         } else {
+            av_log(s, AV_LOG_ERROR, "frag_interleave.\n");
             if (!mov->mdat_buf)
                 continue;
             buf_size = avio_close_dyn_buf(mov->mdat_buf, &buf);
             mov->mdat_buf = NULL;
         }
-
+        av_log(s, AV_LOG_ERROR, "mdat size %d\n", buf_size);
         avio_write(s->pb, buf, buf_size);
         av_free(buf);
     }

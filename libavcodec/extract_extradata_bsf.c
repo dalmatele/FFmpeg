@@ -155,7 +155,7 @@ static int extract_extradata_h2645(AVBSFContext *ctx, AVPacket *pkt,
         extradata_nal_types    = extradata_nal_types_h264;
         nb_extradata_nal_types = FF_ARRAY_ELEMS(extradata_nal_types_h264);
     }
-
+    av_log(ctx, AV_LOG_INFO, "extrac_extradata - 158: %d \n", pkt->size);
     ret = ff_h2645_packet_split(&s->h2645_pkt, pkt->data, pkt->size,
                                 ctx, 0, 0, ctx->par_in->codec_id, 1, 0);
     if (ret < 0)

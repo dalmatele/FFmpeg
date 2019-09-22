@@ -130,6 +130,12 @@ DEF(unsigned int, byte, 1, AV_RB8 , AV_WB8)
 #   define bytestream2_peek_ne64 bytestream2_peek_le64
 #endif
 
+/**
+ * Create a byte context with begin, pos and end pointer
+ * @param g input context
+ * @param buf buffer
+ * @param buf_size size of buffer
+ */
 static av_always_inline void bytestream2_init(GetByteContext *g,
                                               const uint8_t *buf,
                                               int buf_size)
@@ -151,6 +157,11 @@ static av_always_inline void bytestream2_init_writer(PutByteContext *p,
     p->eof          = 0;
 }
 
+/**
+ * how many byte we have from current position to end of buffer?
+ * @param g
+ * @return 
+ */
 static av_always_inline unsigned int bytestream2_get_bytes_left(GetByteContext *g)
 {
     return g->buffer_end - g->buffer;

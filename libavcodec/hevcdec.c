@@ -3047,7 +3047,7 @@ static int decode_nal_units(HEVCContext *s, const uint8_t *buf, int length)
     s->last_eos = s->eos;
     s->eos = 0;
     s->overlap = 0;
-
+    av_log(s->avctx, AV_LOG_INFO, "hevcdec - 3050: %d \n", length);
     /* split the input packet into NAL units, so we know the upper bound on the
      * number of slices in the frame */
     ret = ff_h2645_packet_split(&s->pkt, buf, length, s->avctx, s->is_nalff,
@@ -3218,6 +3218,7 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
     }
 
     s->ref = NULL;
+    av_log(avctx, AV_LOG_INFO, "hevcdec - 3221: %d.\n", avpkt->size);
     ret    = decode_nal_units(s, avpkt->data, avpkt->size);
     if (ret < 0)
         return ret;

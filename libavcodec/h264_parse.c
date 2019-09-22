@@ -366,7 +366,7 @@ static int decode_extradata_ps(const uint8_t *data, int size, H264ParamSets *ps,
 {
     H2645Packet pkt = { 0 };
     int i, ret = 0;
-
+    av_log(logctx, AV_LOG_INFO, "h264_parse - 369: %d \n", size);
     ret = ff_h2645_packet_split(&pkt, data, size, logctx, is_avc, 2, AV_CODEC_ID_H264, 1, 0);
     if (ret < 0) {
         ret = 0;
@@ -418,7 +418,8 @@ static int decode_extradata_ps_mp4(const uint8_t *buf, int buf_size, H264ParamSe
                                    int err_recognition, void *logctx)
 {
     int ret;
-
+    av_log(logctx, AV_LOG_WARNING,
+               "h264_parse:decode_extradata_ps_mp4 - 421: length %d\n", buf_size);
     ret = decode_extradata_ps(buf, buf_size, ps, 1, logctx);
     if (ret < 0 && !(err_recognition & AV_EF_EXPLODE)) {
         GetByteContext gbc;
@@ -450,7 +451,8 @@ static int decode_extradata_ps_mp4(const uint8_t *buf, int buf_size, H264ParamSe
 
         escaped_buf_size = bytestream2_tell_p(&pbc);
         AV_WB16(escaped_buf, escaped_buf_size - 2);
-
+        av_log(logctx, AV_LOG_WARNING,
+               "h254_parse:decode_extradata_ps_mp4 2: get nalsize\n");
         (void)decode_extradata_ps(escaped_buf, escaped_buf_size, ps, 1, logctx);
         // lorex.mp4 decodes ok even with extradata decoding failing
         av_freep(&escaped_buf);
@@ -473,7 +475,7 @@ int ff_h264_decode_extradata(const uint8_t *data, int size, H264ParamSets *ps,
         const uint8_t *p = data;
 
         *is_avc = 1;
-
+        av_log(logctx, AV_LOG_ERROR, "avcC %d\n", size);
         if (size < 7) {
             av_log(logctx, AV_LOG_ERROR, "avcC %d too short\n", size);
             return AVERROR_INVALIDDATA;
@@ -486,6 +488,8 @@ int ff_h264_decode_extradata(const uint8_t *data, int size, H264ParamSets *ps,
             nalsize = AV_RB16(p) + 2;
             if (nalsize > size - (p - data))
                 return AVERROR_INVALIDDATA;
+            av_log(logctx, AV_LOG_WARNING,
+               "h264_parse:decode_extradata_ps_mp4 - 492: length %d\n", nalsize);
             ret = decode_extradata_ps_mp4(p, nalsize, ps, err_recognition, logctx);
             if (ret < 0) {
                 av_log(logctx, AV_LOG_ERROR,
@@ -500,6 +504,8 @@ int ff_h264_decode_extradata(const uint8_t *data, int size, H264ParamSets *ps,
             nalsize = AV_RB16(p) + 2;
             if (nalsize > size - (p - data))
                 return AVERROR_INVALIDDATA;
+            av_log(logctx, AV_LOG_WARNING,
+               "h264_parse - 508: length %d\n", nalsize);
             ret = decode_extradata_ps_mp4(p, nalsize, ps, err_recognition, logctx);
             if (ret < 0) {
                 av_log(logctx, AV_LOG_ERROR,
@@ -512,6 +518,8 @@ int ff_h264_decode_extradata(const uint8_t *data, int size, H264ParamSets *ps,
         *nal_length_size = (data[4] & 0x03) + 1;
     } else {
         *is_avc = 0;
+        av_log(logctx, AV_LOG_WARNING,
+               "h254_parse:decode_extradata_ps_mp4 5: get nalsize\n");
         ret = decode_extradata_ps(data, size, ps, 0, logctx);
         if (ret < 0)
             return ret;

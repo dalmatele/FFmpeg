@@ -28,7 +28,7 @@ static int hevc_decode_nal_units(const uint8_t *buf, int buf_size, HEVCParamSets
     int i;
     int ret = 0;
     H2645Packet pkt = { 0 };
-
+    av_log(logctx, AV_LOG_INFO, "hevc_parse - 31: %d \n", buf_size);
     ret = ff_h2645_packet_split(&pkt, buf, buf_size, logctx, is_nalff,
                                 nal_length_size, AV_CODEC_ID_HEVC, 1, 0);
     if (ret < 0) {
@@ -114,7 +114,7 @@ int ff_hevc_decode_extradata(const uint8_t *data, int size, HEVCParamSets *ps,
                            "Invalid NAL unit size in extradata.\n");
                     return AVERROR_INVALIDDATA;
                 }
-
+                av_log(logctx, AV_LOG_INFO, "hevc_parse - 117: %d.\n", nalsize);
                 ret = hevc_decode_nal_units(gb.buffer, nalsize, ps, sei, *is_nalff,
                                             *nal_length_size, err_recognition, apply_defdispwin,
                                             logctx);
@@ -133,6 +133,7 @@ int ff_hevc_decode_extradata(const uint8_t *data, int size, HEVCParamSets *ps,
         *nal_length_size = nal_len_size;
     } else {
         *is_nalff = 0;
+        av_log(logctx, AV_LOG_INFO, "hevc_parse - 136: %d.\n", size);
         ret = hevc_decode_nal_units(data, size, ps, sei, *is_nalff, *nal_length_size,
                                     err_recognition, apply_defdispwin, logctx);
         if (ret < 0)

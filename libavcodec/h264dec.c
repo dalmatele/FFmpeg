@@ -621,7 +621,7 @@ static int decode_nal_units(H264Context *h, const uint8_t *buf, int buf_size)
         }else if(buf_size > 3 && AV_RB32(buf) > 1 && AV_RB32(buf) <= (unsigned)buf_size)
             h->is_avc = 1;
     }
-
+    av_log(avctx, AV_LOG_INFO, "h264dec - 624: %d \n", buf_size);
     ret = ff_h2645_packet_split(&h->pkt, buf, buf_size, avctx, h->is_avc, h->nal_length_size,
                                 avctx->codec_id, avctx->flags2 & AV_CODEC_FLAG2_FAST, 0);
     if (ret < 0) {
@@ -967,7 +967,7 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
     AVFrame *pict      = data;
     int buf_index;
     int ret;
-
+    av_log(avctx, AV_LOG_INFO, "h264dec - 970: channel %d.\n", avctx->channels);    
     h->flags = avctx->flags;
     h->setup_finished = 0;
     h->nb_slice_ctx_queued = 0;
@@ -992,7 +992,7 @@ static int h264_decode_frame(AVCodecContext *avctx, void *data,
                                             &h->ps, &h->is_avc, &h->nal_length_size,
                                             avctx->err_recognition, avctx);
     }
-
+    av_log(avctx, AV_LOG_INFO, "h264dec - 995: %d.\n", buf_size);//buf_size = default_sample_size
     buf_index = decode_nal_units(h, buf, buf_size);
     if (buf_index < 0)
         return AVERROR_INVALIDDATA;

@@ -192,7 +192,7 @@ static int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
     s->picture_structure = AV_PICTURE_STRUCTURE_UNKNOWN;
 
     ff_hevc_reset_sei(sei);
-
+    av_log(avctx, AV_LOG_INFO, "hevc_parser - 31: %d \n", buf_size);
     ret = ff_h2645_packet_split(&ctx->pkt, buf, buf_size, avctx, ctx->is_avc,
                                 ctx->nal_length_size, AV_CODEC_ID_HEVC, 1, 0);
     if (ret < 0)

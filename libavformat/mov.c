@@ -4662,7 +4662,7 @@ static int mov_read_tfdt(MOVContext *c, AVIOContext *pb, MOVAtom atom)
         }
     }
     if (!st) {
-        av_log(c->fc, AV_LOG_WARNING, "could not find corresponding track id %u\n", frag->track_id);
+        av_log(c->fc, AV_LOG_WARNING, "could not find corresponding track id %u in tfdt\n", frag->track_id);
         return 0;
     }
     sc = st->priv_data;
@@ -4714,7 +4714,7 @@ static int mov_read_trun(MOVContext *c, AVIOContext *pb, MOVAtom atom)
         }
     }
     if (!st) {
-        av_log(c->fc, AV_LOG_WARNING, "could not find corresponding track id %u\n", frag->track_id);
+        av_log(c->fc, AV_LOG_WARNING, "could not find corresponding track id %u in trun\n", frag->track_id);
         return 0;
     }
     sc = st->priv_data;
@@ -4979,13 +4979,14 @@ static int mov_read_sidx(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 
     track_id = avio_rb32(pb); // Reference ID
     for (i = 0; i < c->fc->nb_streams; i++) {
+        av_log(c->fc, AV_LOG_DEBUG, "track id %d %d in sidx\n", c->fc->streams[i]->id, track_id);
         if (c->fc->streams[i]->id == track_id) {
             st = c->fc->streams[i];
             break;
         }
     }
     if (!st) {
-        av_log(c->fc, AV_LOG_WARNING, "could not find corresponding track id %d\n", track_id);
+        av_log(c->fc, AV_LOG_WARNING, "could not find corresponding track id %d in sidx\n", track_id);
         return 0;
     }
 

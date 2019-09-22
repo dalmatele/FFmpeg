@@ -4653,6 +4653,7 @@ static int transcode_step(void)
  */
 static int transcode(void)
 {
+    av_log(NULL, AV_LOG_INFO, "run here\n");
     int ret, i;
     AVFormatContext *os;
     OutputStream *ost;

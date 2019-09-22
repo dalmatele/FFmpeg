@@ -84,7 +84,7 @@ typedef struct H2645Packet {
  * Extract the raw (unescaped) bitstream.
  */
 int ff_h2645_extract_rbsp(const uint8_t *src, int length, H2645RBSP *rbsp,
-                          H2645NAL *nal, int small_padding);
+                          H2645NAL *nal, int small_padding, void *logctx);
 
 /**
  * Split an input packet into NAL units.
@@ -113,12 +113,14 @@ static inline int get_nalsize(int nal_length_size, const uint8_t *buf,
                               int buf_size, int *buf_index, void *logctx)
 {
     int i, nalsize = 0;
-
+    av_log(logctx, AV_LOG_ERROR,
+               "h2645_parse.h - 117: %d - %d - %d\n", nal_length_size, buf_size, *buf_index);
     if (*buf_index >= buf_size - nal_length_size) {
         // the end of the buffer is reached, refill it
         return AVERROR(EAGAIN);
     }
 
+    //use 4byte to save size of nal unit
     for (i = 0; i < nal_length_size; i++)
         nalsize = ((unsigned)nalsize << 8) | buf[(*buf_index)++];
     if (nalsize <= 0 || nalsize > buf_size - *buf_index) {
@@ -126,6 +128,8 @@ static inline int get_nalsize(int nal_length_size, const uint8_t *buf,
                "Invalid NAL unit size (%d > %d).\n", nalsize, buf_size - *buf_index);
         return AVERROR_INVALIDDATA;
     }
+    av_log(logctx, AV_LOG_ERROR,
+               "h2645_parse.h - 130: NAL unit size (%d : %d).\n", nalsize, buf_size - *buf_index);
     return nalsize;
 }
 

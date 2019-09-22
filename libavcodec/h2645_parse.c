@@ -32,12 +32,12 @@
 #include "h2645_parse.h"
 
 int ff_h2645_extract_rbsp(const uint8_t *src, int length,
-                          H2645RBSP *rbsp, H2645NAL *nal, int small_padding)
+                          H2645RBSP *rbsp, H2645NAL *nal, int small_padding, void *logctx)
 {
     int i, si, di;
     uint8_t *dst;
 
-    nal->skipped_bytes = 0;
+    nal->skipped_bytes = 0;    
 #define STARTCODE_TEST                                                  \
         if (i + 2 < length && src[i + 1] == 0 && src[i + 2] <= 3) {     \
             if (src[i + 2] != 3 && src[i + 2] != 0) {                   \
@@ -81,8 +81,7 @@ int ff_h2645_extract_rbsp(const uint8_t *src, int length,
             i--;
         STARTCODE_TEST;
     }
-#endif /* HAVE_FAST_UNALIGNED */
-
+#endif /* HAVE_FAST_UNALIGNED */      
     if (i >= length - 1 && small_padding) { // no escaped 0
         nal->data     =
         nal->raw_data = src;
@@ -97,6 +96,7 @@ int ff_h2645_extract_rbsp(const uint8_t *src, int length,
 
     memcpy(dst, src, i);
     si = di = i;
+    av_log(logctx, AV_LOG_INFO, "h2645_parse - 99: %d\n", si);
     while (si + 2 < length) {
         // remove escapes (very rare 1:2^22)
         if (src[si + 2] > 3) {
@@ -142,7 +142,7 @@ nsc:
     nal->raw_data = src;
     nal->raw_size = si;
     rbsp->rbsp_buffer_size += si;
-
+    av_log(logctx, AV_LOG_INFO, "h2645_parse - 144: %d\n", si);
     return si;
 }
 
@@ -390,6 +390,19 @@ fail:
     return;
 }
 
+/**
+ * 
+ * @param pkt
+ * @param buf
+ * @param length
+ * @param logctx
+ * @param is_nalff
+ * @param nal_length_size
+ * @param codec_id
+ * @param small_padding
+ * @param use_ref
+ * @return 
+ */
 int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
                           void *logctx, int is_nalff, int nal_length_size,
                           enum AVCodecID codec_id, int small_padding, int use_ref)
@@ -398,48 +411,50 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
     int consumed, ret = 0;
     int next_avc = is_nalff ? 0 : length;
     int64_t padding = small_padding ? 0 : MAX_MBPAIR_SIZE;
-
+    av_log(logctx, AV_LOG_INFO, "h2645 - 414: %d.\n", length);
     bytestream2_init(&bc, buf, length);
-    alloc_rbsp_buffer(&pkt->rbsp, length + padding, use_ref);
-
+    av_log(logctx, AV_LOG_INFO, "h2645 - 416: %d.\n", length);
+    alloc_rbsp_buffer(&pkt->rbsp, length + padding, use_ref);    
     if (!pkt->rbsp.rbsp_buffer)
         return AVERROR(ENOMEM);
 
     pkt->rbsp.rbsp_buffer_size = 0;
-    pkt->nb_nals = 0;
+    pkt->nb_nals = 0;    
+    av_log(logctx, AV_LOG_INFO, "h2645 - 422: %d.\n", length);
     while (bytestream2_get_bytes_left(&bc) >= 4) {
         H2645NAL *nal;
         int extract_length = 0;
         int skip_trailing_zeros = 1;
 
         if (bytestream2_tell(&bc) == next_avc) {
+            av_log(logctx, AV_LOG_INFO, "h2645_parse - 430: length %d\n", length);
             int i = 0;
             extract_length = get_nalsize(nal_length_size,
                                          bc.buffer, bytestream2_get_bytes_left(&bc), &i, logctx);
+            av_log(logctx, AV_LOG_INFO, "h2645_parse - 434: length %d\n", extract_length);
             if (extract_length < 0)
                 return extract_length;
 
             bytestream2_skip(&bc, nal_length_size);
-
-            next_avc = bytestream2_tell(&bc) + extract_length;
+            av_log(logctx, AV_LOG_INFO, "h2645_parse - 439: %d\n", nal_length_size);
+            next_avc = bytestream2_tell(&bc) + extract_length;            
         } else {
             int buf_index;
 
             if (bytestream2_tell(&bc) > next_avc)
-                av_log(logctx, AV_LOG_WARNING, "Exceeded next NALFF position, re-syncing.\n");
-
+                av_log(logctx, AV_LOG_WARNING, "Exceeded next NALFF position, re-syncing.\n");            
             /* search start code */
             buf_index = find_next_start_code(bc.buffer, buf + next_avc);
 
             bytestream2_skip(&bc, buf_index);
-
+            av_log(logctx, AV_LOG_ERROR, "h264_parse - 449: %d\n", buf_index);
             if (!bytestream2_get_bytes_left(&bc)) {
                 if (pkt->nb_nals > 0) {
                     // No more start codes: we discarded some irrelevant
                     // bytes at the end of the packet.
                     return 0;
                 } else {
-                    av_log(logctx, AV_LOG_ERROR, "No start code is found.\n");
+                    av_log(logctx, AV_LOG_ERROR, "h264_parse - 457: No start code is found.\n");
                     return AVERROR_INVALIDDATA;
                 }
             }
@@ -452,7 +467,7 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
                 continue;
             }
         }
-
+        av_log(logctx, AV_LOG_INFO, "h2645_parse - 470: length %d\n", length);
         if (pkt->nals_allocated < pkt->nb_nals + 1) {
             int new_size = pkt->nals_allocated + 1;
             void *tmp = av_realloc_array(pkt->nals, new_size, sizeof(*pkt->nals));
@@ -471,9 +486,8 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
 
             pkt->nals_allocated = new_size;
         }
-        nal = &pkt->nals[pkt->nb_nals];
-
-        consumed = ff_h2645_extract_rbsp(bc.buffer, extract_length, &pkt->rbsp, nal, small_padding);
+        nal = &pkt->nals[pkt->nb_nals];       
+        consumed = ff_h2645_extract_rbsp(bc.buffer, extract_length, &pkt->rbsp, nal, small_padding, logctx);
         if (consumed < 0)
             return consumed;
 
@@ -483,7 +497,7 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
                    consumed, extract_length);
 
         pkt->nb_nals++;
-
+        av_log(logctx, AV_LOG_INFO, "h2645_parse - 501: %d\n", consumed);
         bytestream2_skip(&bc, consumed);
 
         /* see commit 3566042a0 */
@@ -508,8 +522,9 @@ int ff_h2645_packet_split(H2645Packet *pkt, const uint8_t *buf, int length,
             }
             pkt->nb_nals--;
         }
+        av_log(logctx, AV_LOG_INFO, "h2645_parse - 526: %d\n", bytestream2_get_bytes_left(&bc));
     }
-
+    av_log(logctx, AV_LOG_INFO, "h2645_parse - 527: length %d\n", length);
     return 0;
 }
 

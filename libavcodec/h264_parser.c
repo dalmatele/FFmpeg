@@ -308,7 +308,7 @@ static inline int parse_nal_units(AVCodecParserContext *s,
             }
             break;
         }
-        consumed = ff_h2645_extract_rbsp(buf + buf_index, src_length, &rbsp, &nal, 1);
+        consumed = ff_h2645_extract_rbsp(buf + buf_index, src_length, &rbsp, &nal, 1, avctx);
         if (consumed < 0)
             break;
 
