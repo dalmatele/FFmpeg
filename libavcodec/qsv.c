@@ -138,6 +138,35 @@ int ff_qsv_level_to_mfx(enum AVCodecID codec_id, int level)
 }
 
 static const struct {
+    int mfx_iopattern;
+    const char *desc;
+} qsv_iopatterns[] = {
+    {MFX_IOPATTERN_IN_VIDEO_MEMORY,     "input is video memory surface"         },
+    {MFX_IOPATTERN_IN_SYSTEM_MEMORY,    "input is system memory surface"        },
+    {MFX_IOPATTERN_IN_OPAQUE_MEMORY,    "input is opaque memory surface"        },
+    {MFX_IOPATTERN_OUT_VIDEO_MEMORY,    "output is video memory surface"        },
+    {MFX_IOPATTERN_OUT_SYSTEM_MEMORY,   "output is system memory surface"       },
+    {MFX_IOPATTERN_OUT_OPAQUE_MEMORY,   "output is opaque memory surface"       },
+};
+
+int ff_qsv_print_iopattern(void *log_ctx, int mfx_iopattern,
+                           const char *extra_string)
+{
+    const char *desc = NULL;
+
+    for (int i = 0; i < FF_ARRAY_ELEMS(qsv_iopatterns); i++) {
+        if (qsv_iopatterns[i].mfx_iopattern == mfx_iopattern) {
+            desc = qsv_iopatterns[i].desc;
+        }
+    }
+    if (!desc)
+        desc = "unknown iopattern";
+
+    av_log(log_ctx, AV_LOG_VERBOSE, "%s: %s\n", extra_string, desc);
+    return 0;
+}
+
+static const struct {
     mfxStatus   mfxerr;
     int         averr;
     const char *desc;
@@ -348,7 +377,41 @@ load_plugin_fail:
 
 }
 
-int ff_qsv_init_internal_session(AVCodecContext *avctx, mfxSession *session,
+//This code is only required for Linux since a display handle is required.
+//For Windows the session is complete and ready to use.
+
+#ifdef AVCODEC_QSV_LINUX_SESSION_HANDLE
+static int ff_qsv_set_display_handle(AVCodecContext *avctx, QSVSession *qs)
+{
+    AVDictionary *child_device_opts = NULL;
+    AVVAAPIDeviceContext *hwctx;
+    int ret;
+
+    av_dict_set(&child_device_opts, "kernel_driver", "i915", 0);
+    av_dict_set(&child_device_opts, "driver",        "iHD",  0);
+
+    ret = av_hwdevice_ctx_create(&qs->va_device_ref, AV_HWDEVICE_TYPE_VAAPI, NULL, child_device_opts, 0);
+    if (ret < 0) {
+        av_log(avctx, AV_LOG_ERROR, "Failed to create a VAAPI device.\n");
+        return ret;
+    } else {
+        qs->va_device_ctx = (AVHWDeviceContext*)qs->va_device_ref->data;
+        hwctx = qs->va_device_ctx->hwctx;
+
+        ret = MFXVideoCORE_SetHandle(qs->session,
+                (mfxHandleType)MFX_HANDLE_VA_DISPLAY, (mfxHDL)hwctx->display);
+        if (ret < 0) {
+            return ff_qsv_print_error(avctx, ret, "Error during set display handle\n");
+        }
+    }
+
+    av_dict_free(&child_device_opts);
+
+    return 0;
+}
+#endif //AVCODEC_QSV_LINUX_SESSION_HANDLE
+
+int ff_qsv_init_internal_session(AVCodecContext *avctx, QSVSession *qs,
                                  const char *load_plugins)
 {
     mfxIMPL impl   = MFX_IMPL_AUTO_ANY;
@@ -357,18 +420,24 @@ int ff_qsv_init_internal_session(AVCodecContext *avctx, mfxSession *session,
     const char *desc;
     int ret;
 
-    ret = MFXInit(impl, &ver, session);
+    ret = MFXInit(impl, &ver, &qs->session);
     if (ret < 0)
         return ff_qsv_print_error(avctx, ret,
                                   "Error initializing an internal MFX session");
 
-    ret = qsv_load_plugins(*session, load_plugins, avctx);
+#ifdef AVCODEC_QSV_LINUX_SESSION_HANDLE
+    ret = ff_qsv_set_display_handle(avctx, qs);
+    if (ret < 0)
+        return ret;
+#endif
+
+    ret = qsv_load_plugins(qs->session, load_plugins, avctx);
     if (ret < 0) {
         av_log(avctx, AV_LOG_ERROR, "Error loading plugins\n");
         return ret;
     }
 
-    MFXQueryIMPL(*session, &impl);
+    MFXQueryIMPL(qs->session, &impl);
 
     switch (MFX_IMPL_BASETYPE(impl)) {
     case MFX_IMPL_SOFTWARE:
@@ -756,5 +825,21 @@ int ff_qsv_init_session_frames(AVCodecContext *avctx, mfxSession *psession,
     }
 
     *psession = session;
+    return 0;
+}
+
+int ff_qsv_close_internal_session(QSVSession *qs)
+{
+    if (qs->session) {
+        MFXClose(qs->session);
+        qs->session = NULL;
+    }
+#ifdef AVCODEC_QSV_LINUX_SESSION_HANDLE
+    if (qs->va_device_ctx) {
+        qs->va_device_ctx->free(qs->va_device_ctx);
+    }
+
+    av_buffer_unref(&qs->va_device_ref);
+#endif
     return 0;
 }

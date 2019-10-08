@@ -4419,7 +4419,10 @@ static int mov_read_custom(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 static int mov_read_meta(MOVContext *c, AVIOContext *pb, MOVAtom atom)
 {
     while (atom.size > 8) {
-        uint32_t tag = avio_rl32(pb);
+        uint32_t tag;
+        if (avio_feof(pb))
+            return AVERROR_EOF;
+        tag = avio_rl32(pb);
         atom.size -= 4;
         if (tag == MKTAG('h','d','l','r')) {
             avio_seek(pb, -8, SEEK_CUR);
@@ -5017,7 +5020,7 @@ static int mov_read_sidx(MOVContext *c, AVIOContext *pb, MOVAtom atom)
             return AVERROR_PATCHWELCOME;
         }
         avio_rb32(pb); // sap_flags
-        timestamp = av_rescale_q(pts, st->time_base, timescale);
+        timestamp = av_rescale_q(pts, timescale, st->time_base);
 
         index = update_frag_index(c, offset);
         frag_stream_info = get_frag_stream_info(&c->frag_index, index, track_id);
@@ -7843,8 +7846,10 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
         aax_filter(pkt->data, pkt->size, mov);
 
     ret = cenc_filter(mov, st, sc, pkt, current_index);
-    if (ret < 0)
+    if (ret < 0) {
+        av_packet_unref(pkt);
         return ret;
+    }
 
     return 0;
 }

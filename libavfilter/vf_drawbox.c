@@ -208,6 +208,12 @@ fail:
     return ret;
 }
 
+static av_pure av_always_inline int pixel_belongs_to_box(DrawBoxContext *s, int x, int y)
+{
+    return (y - s->y < s->thickness) || (s->y + s->h - 1 - y < s->thickness) ||
+           (x - s->x < s->thickness) || (s->x + s->w - 1 - x < s->thickness);
+}
+
 static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
 {
     DrawBoxContext *s = inlink->dst->priv;
@@ -225,13 +231,11 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
 
             if (s->invert_color) {
                 for (x = FFMAX(xb, 0); x < xb + s->w && x < frame->width; x++)
-                    if ((y - yb < s->thickness) || (yb + s->h - 1 - y < s->thickness) ||
-                        (x - xb < s->thickness) || (xb + s->w - 1 - x < s->thickness))
+                    if (pixel_belongs_to_box(s, x, y))
                         row[0][x] = 0xff - row[0][x];
             } else {
                 for (x = FFMAX(xb, 0); x < xb + s->w && x < frame->width; x++) {
-                    if ((y - yb < s->thickness) || (yb + s->h - 1 - y < s->thickness) ||
-                        (x - xb < s->thickness) || (xb + s->w - 1 - x < s->thickness)) {
+                    if (pixel_belongs_to_box(s, x, y)) {
                         row[0][x           ] = s->yuv_color[Y];
                         row[1][x >> s->hsub] = s->yuv_color[U];
                         row[2][x >> s->hsub] = s->yuv_color[V];
@@ -250,15 +254,13 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
 
             if (s->invert_color) {
                 for (x = FFMAX(xb, 0); x < xb + s->w && x < frame->width; x++)
-                    if ((y - yb < s->thickness) || (yb + s->h - 1 - y < s->thickness) ||
-                        (x - xb < s->thickness) || (xb + s->w - 1 - x < s->thickness))
+                    if (pixel_belongs_to_box(s, x, y))
                         row[0][x] = 0xff - row[0][x];
             } else {
                 for (x = FFMAX(xb, 0); x < xb + s->w && x < frame->width; x++) {
                     double alpha = (double)s->yuv_color[A] / 255;
 
-                    if ((y - yb < s->thickness) || (yb + s->h - 1 - y < s->thickness) ||
-                        (x - xb < s->thickness) || (xb + s->w - 1 - x < s->thickness)) {
+                    if (pixel_belongs_to_box(s, x, y)) {
                         row[0][x                 ] = (1 - alpha) * row[0][x                 ] + alpha * s->yuv_color[Y];
                         row[1][x >> s->hsub] = (1 - alpha) * row[1][x >> s->hsub] + alpha * s->yuv_color[U];
                         row[2][x >> s->hsub] = (1 - alpha) * row[2][x >> s->hsub] + alpha * s->yuv_color[V];
@@ -269,6 +271,46 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
     }
 
     return ff_filter_frame(inlink->dst->outputs[0], frame);
+}
+
+static int process_command(AVFilterContext *ctx, const char *cmd, const char *args, char *res, int res_len, int flags)
+{
+    DrawBoxContext *s = ctx->priv;
+    int ret;
+
+    if (   !strcmp(cmd, "w") || !strcmp(cmd, "width")
+        || !strcmp(cmd, "h") || !strcmp(cmd, "height")
+        || !strcmp(cmd, "x") || !strcmp(cmd, "y")
+        || !strcmp(cmd, "t") || !strcmp(cmd, "thickness")
+        || !strcmp(cmd, "c") || !strcmp(cmd, "color")
+        || !strcmp(cmd, "replace")) {
+
+        int old_x = s->x;
+        int old_y = s->y;
+        int old_w = s->w;
+        int old_h = s->h;
+        int old_t = s->thickness;
+        int old_r = s->replace;
+
+        AVFilterLink *inlink = ctx->inputs[0];
+
+        av_opt_set(s, cmd, args, 0);
+        init(ctx);
+
+        if ((ret = config_input(inlink)) < 0) {
+            s->x = old_x;
+            s->y = old_y;
+            s->w = old_w;
+            s->h = old_h;
+            s->thickness = old_t;
+            s->replace = old_r;
+            return ret;
+        }
+    } else {
+        ret = AVERROR(ENOSYS);
+    }
+
+    return ret;
 }
 
 #define OFFSET(x) offsetof(DrawBoxContext, x)
@@ -321,6 +363,7 @@ AVFilter ff_vf_drawbox = {
     .query_formats = query_formats,
     .inputs        = drawbox_inputs,
     .outputs       = drawbox_outputs,
+    .process_command = process_command,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
 };
 #endif /* CONFIG_DRAWBOX_FILTER */
@@ -455,6 +498,7 @@ AVFilter ff_vf_drawgrid = {
     .inputs        = drawgrid_inputs,
     .outputs       = drawgrid_outputs,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
+    .process_command = process_command,
 };
 
 #endif  /* CONFIG_DRAWGRID_FILTER */

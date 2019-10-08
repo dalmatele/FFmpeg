@@ -138,7 +138,6 @@ static int filter_vertically_##name(AVFilterContext *ctx, void *arg, int jobnr, 
         float acc = 0;                                                                        \
         int count = 0;                                                                        \
                                                                                               \
-        ptr = buffer + x;                                                                     \
         src = s->buffer + x;                                                                  \
                                                                                               \
         for (i = 0; i < radius; i++) {                                                        \
@@ -288,6 +287,22 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
     return ff_filter_frame(outlink, out);
 }
 
+static int process_command(AVFilterContext *ctx, const char *cmd, const char *args,
+                           char *res, int res_len, int flags)
+{
+    AverageBlurContext *s = ctx->priv;
+    int ret = 0;
+
+    if (   !strcmp(cmd, "sizeX") || !strcmp(cmd, "sizeY")
+        || !strcmp(cmd, "planes")) {
+        av_opt_set(s, cmd, args, 0);
+    } else {
+        ret = AVERROR(ENOSYS);
+    }
+
+    return ret;
+}
+
 static av_cold void uninit(AVFilterContext *ctx)
 {
     AverageBlurContext *s = ctx->priv;
@@ -323,4 +338,5 @@ AVFilter ff_vf_avgblur = {
     .inputs        = avgblur_inputs,
     .outputs       = avgblur_outputs,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
+    .process_command = process_command,
 };

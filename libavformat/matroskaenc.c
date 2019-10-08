@@ -717,8 +717,7 @@ static int get_aac_sample_rates(AVFormatContext *s, uint8_t *extradata, int extr
     MPEG4AudioConfig mp4ac;
     int ret;
 
-    ret = avpriv_mpeg4audio_get_config(&mp4ac, extradata,
-                                       extradata_size * 8, 1);
+    ret = avpriv_mpeg4audio_get_config2(&mp4ac, extradata, extradata_size, 1, s);
     /* Don't abort if the failure is because of missing extradata. Assume in that
      * case a bitstream filter will provide the muxer with the extradata in the
      * first packet.
@@ -1312,6 +1311,9 @@ static int mkv_write_track(AVFormatContext *s, MatroskaMuxContext *mkv,
         if(   st->avg_frame_rate.num > 0 && st->avg_frame_rate.den > 0
            && av_cmp_q(av_inv_q(st->avg_frame_rate), st->time_base) > 0)
             put_ebml_uint(pb, MATROSKA_ID_TRACKDEFAULTDURATION, 1000000000LL * st->avg_frame_rate.den / st->avg_frame_rate.num);
+        else if(   st->r_frame_rate.num > 0 && st->r_frame_rate.den > 0
+                && av_cmp_q(av_inv_q(st->r_frame_rate), st->time_base) > 0)
+            put_ebml_uint(pb, MATROSKA_ID_TRACKDEFAULTDURATION, 1000000000LL * st->r_frame_rate.den / st->r_frame_rate.num);
 
         if (!native_id &&
             ff_codec_get_tag(ff_codec_movvideo_tags, par->codec_id) &&

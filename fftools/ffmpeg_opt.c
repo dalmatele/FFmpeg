@@ -1,3 +1,4 @@
+
 /*
  * ffmpeg option parsing
  *
@@ -931,7 +932,7 @@ static void assert_file_overwrite(const char *filename)
     if (!file_overwrite) {
         if (proto_name && !strcmp(proto_name, "file") && avio_check(filename, 0) == 0) {
             if (stdin_interaction && !no_file_overwrite) {
-                fprintf(stderr,"File '%s' already exists. Overwrite ? [y/N] ", filename);
+                fprintf(stderr,"File '%s' already exists. Overwrite? [y/N] ", filename);
                 fflush(stderr);
                 term_exit();
                 signal(SIGINT, SIG_DFL);
@@ -2769,13 +2770,14 @@ static int opt_target(void *optctx, const char *opt, const char *arg)
     } else {
         /* Try to determine PAL/NTSC by peeking in the input files */
         if (nb_input_files) {
-            int i, j, fr;
+            int i, j;
             for (j = 0; j < nb_input_files; j++) {
                 for (i = 0; i < input_files[j]->nb_streams; i++) {
                     AVStream *st = input_files[j]->ctx->streams[i];
+                    int64_t fr;
                     if (st->codecpar->codec_type != AVMEDIA_TYPE_VIDEO)
                         continue;
-                    fr = st->time_base.den * 1000 / st->time_base.num;
+                    fr = st->time_base.den * 1000LL / st->time_base.num;
                     if (fr == 25000) {
                         norm = PAL;
                         break;
@@ -3441,7 +3443,7 @@ const OptionDef options[] = {
     { "stdin",          OPT_BOOL | OPT_EXPERT,                       { &stdin_interaction },
       "enable or disable interaction on standard input" },
     { "timelimit",      HAS_ARG | OPT_EXPERT,                        { .func_arg = opt_timelimit },
-        "set max runtime in seconds", "limit" },
+        "set max runtime in seconds in CPU user time", "limit" },
     { "dump",           OPT_BOOL | OPT_EXPERT,                       { &do_pkt_dump },
         "dump each input packet" },
     { "hex",            OPT_BOOL | OPT_EXPERT,                       { &do_hex_dump },

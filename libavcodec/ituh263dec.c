@@ -222,7 +222,7 @@ int ff_h263_resync(MpegEncContext *s){
             get_bits(&s->gb, 8);
         }
 
-        if (show_bits_long(&s->gb, 32) == SLICE_START_CODE)
+        if (get_bits_left(&s->gb) >= 32 && show_bits_long(&s->gb, 32) == SLICE_START_CODE)
             return get_bits_count(&s->gb);
         else
             return -1;
@@ -1281,7 +1281,7 @@ int ff_h263_decode_picture_header(MpegEncContext *s)
         for(i=0; i<13; i++){
             for(j=0; j<3; j++){
                 int v= get_bits(&s->gb, 8);
-                v |= get_sbits(&s->gb, 8)<<8;
+                v |= get_sbits(&s->gb, 8) * (1 << 8);
                 av_log(s->avctx, AV_LOG_DEBUG, " %5d", v);
             }
             av_log(s->avctx, AV_LOG_DEBUG, "\n");

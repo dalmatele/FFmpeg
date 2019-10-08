@@ -26,34 +26,67 @@
 #include "dnn_backend_native.h"
 #include "libavutil/avassert.h"
 #include "dnn_backend_native_layer_pad.h"
+#include "dnn_backend_native_layer_conv2d.h"
+#include "dnn_backend_native_layer_depth2space.h"
+#include "dnn_backend_native_layer_maximum.h"
 
 static DNNReturnType set_input_output_native(void *model, DNNInputData *input, const char *input_name, const char **output_names, uint32_t nb_output)
 {
     ConvolutionalNetwork *network = (ConvolutionalNetwork *)model;
+    DnnOperand *oprd = NULL;
 
     if (network->layers_num <= 0 || network->operands_num <= 0)
         return DNN_ERROR;
 
+    /* inputs */
     av_assert0(input->dt == DNN_FLOAT);
+    for (int i = 0; i < network->operands_num; ++i) {
+        oprd = &network->operands[i];
+        if (strcmp(oprd->name, input_name) == 0) {
+            if (oprd->type != DOT_INPUT)
+                return DNN_ERROR;
+            break;
+        }
+        oprd = NULL;
+    }
 
-    /**
-     * as the first step, suppose network->operands[0] is the input operand.
-     */
-    network->operands[0].dims[0] = 1;
-    network->operands[0].dims[1] = input->height;
-    network->operands[0].dims[2] = input->width;
-    network->operands[0].dims[3] = input->channels;
-    network->operands[0].type = DOT_INPUT;
-    network->operands[0].data_type = DNN_FLOAT;
-    network->operands[0].isNHWC = 1;
-
-    av_freep(&network->operands[0].data);
-    network->operands[0].length = calculate_operand_data_length(&network->operands[0]);
-    network->operands[0].data = av_malloc(network->operands[0].length);
-    if (!network->operands[0].data)
+    if (!oprd)
         return DNN_ERROR;
 
-    input->data = network->operands[0].data;
+    oprd->dims[0] = 1;
+    oprd->dims[1] = input->height;
+    oprd->dims[2] = input->width;
+    oprd->dims[3] = input->channels;
+
+    av_freep(&oprd->data);
+    oprd->length = calculate_operand_data_length(oprd);
+    oprd->data = av_malloc(oprd->length);
+    if (!oprd->data)
+        return DNN_ERROR;
+
+    input->data = oprd->data;
+
+    /* outputs */
+    network->nb_output = 0;
+    av_freep(&network->output_indexes);
+    network->output_indexes = av_mallocz_array(nb_output, sizeof(*network->output_indexes));
+    if (!network->output_indexes)
+        return DNN_ERROR;
+
+    for (uint32_t i = 0; i < nb_output; ++i) {
+        const char *output_name = output_names[i];
+        for (int j = 0; j < network->operands_num; ++j) {
+            oprd = &network->operands[j];
+            if (strcmp(oprd->name, output_name) == 0) {
+                network->output_indexes[network->nb_output++] = j;
+                break;
+            }
+        }
+    }
+
+    if (network->nb_output != nb_output)
+        return DNN_ERROR;
+
     return DNN_SUCCESS;
 }
 
@@ -76,6 +109,7 @@ DNNModel *ff_dnn_load_model_native(const char *model_filename)
     ConvolutionalParams *conv_params;
     DepthToSpaceParams *depth_to_space_params;
     LayerPadParams *pad_params;
+    DnnLayerMaximumParams *maximum_params;
 
     model = av_malloc(sizeof(DNNModel));
     if (!model){
@@ -235,6 +269,21 @@ DNNModel *ff_dnn_load_model_native(const char *model_filename)
             network->layers[layer].type = MIRROR_PAD;
             network->layers[layer].params = pad_params;
             break;
+        case MAXIMUM:
+            maximum_params = av_malloc(sizeof(*maximum_params));
+            if (!maximum_params){
+                avio_closep(&model_file_context);
+                ff_dnn_free_model_native(&model);
+                return NULL;
+            }
+            maximum_params->val.u32 = avio_rl32(model_file_context);
+            dnn_size += 4;
+            network->layers[layer].type = MAXIMUM;
+            network->layers[layer].params = maximum_params;
+            network->layers[layer].input_operand_indexes[0] = (int32_t)avio_rl32(model_file_context);
+            network->layers[layer].output_operand_index = (int32_t)avio_rl32(model_file_context);
+            dnn_size += 8;
+            break;
         default:
             avio_closep(&model_file_context);
             ff_dnn_free_model_native(&model);
@@ -281,128 +330,6 @@ DNNModel *ff_dnn_load_model_native(const char *model_filename)
     return model;
 }
 
-#define CLAMP_TO_EDGE(x, w) ((x) < 0 ? 0 : ((x) >= (w) ? (w - 1) : (x)))
-
-static int convolve(DnnOperand *operands, const int32_t *input_operand_indexes, int32_t output_operand_index, const ConvolutionalParams *conv_params)
-{
-    float *output;
-    int32_t input_operand_index = input_operand_indexes[0];
-    int number = operands[input_operand_index].dims[0];
-    int height = operands[input_operand_index].dims[1];
-    int width = operands[input_operand_index].dims[2];
-    int channel = operands[input_operand_index].dims[3];
-    const float *input = operands[input_operand_index].data;
-
-    int radius = conv_params->kernel_size >> 1;
-    int src_linesize = width * conv_params->input_num;
-    int filter_linesize = conv_params->kernel_size * conv_params->input_num;
-    int filter_size = conv_params->kernel_size * filter_linesize;
-    int pad_size = (conv_params->padding_method == VALID) ? (conv_params->kernel_size - 1) / 2 * conv_params->dilation : 0;
-
-    DnnOperand *output_operand = &operands[output_operand_index];
-    output_operand->dims[0] = number;
-    output_operand->dims[1] = height - pad_size * 2;
-    output_operand->dims[2] = width - pad_size * 2;
-    output_operand->dims[3] = conv_params->output_num;
-    output_operand->length = calculate_operand_data_length(output_operand);
-    output_operand->data = av_realloc(output_operand->data, output_operand->length);
-    if (!output_operand->data)
-        return -1;
-    output = output_operand->data;
-
-    av_assert0(channel == conv_params->input_num);
-
-    for (int y = pad_size; y < height - pad_size; ++y) {
-        for (int x = pad_size; x < width - pad_size; ++x) {
-            for (int n_filter = 0; n_filter < conv_params->output_num; ++n_filter) {
-                output[n_filter] = conv_params->biases[n_filter];
-
-                for (int ch = 0; ch < conv_params->input_num; ++ch) {
-                    for (int kernel_y = 0; kernel_y < conv_params->kernel_size; ++kernel_y) {
-                        for (int kernel_x = 0; kernel_x < conv_params->kernel_size; ++kernel_x) {
-                            float input_pel;
-                            if (conv_params->padding_method == SAME_CLAMP_TO_EDGE) {
-                                int y_pos = CLAMP_TO_EDGE(y + (kernel_y - radius) * conv_params->dilation, height);
-                                int x_pos = CLAMP_TO_EDGE(x + (kernel_x - radius) * conv_params->dilation, width);
-                                input_pel = input[y_pos * src_linesize + x_pos * conv_params->input_num + ch];
-                            } else {
-                                int y_pos = y + (kernel_y - radius) * conv_params->dilation;
-                                int x_pos = x + (kernel_x - radius) * conv_params->dilation;
-                                input_pel = (x_pos < 0 || x_pos >= width || y_pos < 0 || y_pos >= height) ? 0.0 :
-                                                   input[y_pos * src_linesize + x_pos * conv_params->input_num + ch];
-                            }
-
-
-                            output[n_filter] += input_pel * conv_params->kernel[n_filter * filter_size + kernel_y * filter_linesize +
-                                                                                kernel_x * conv_params->input_num + ch];
-                        }
-                    }
-                }
-                switch (conv_params->activation){
-                case RELU:
-                    output[n_filter] = FFMAX(output[n_filter], 0.0);
-                    break;
-                case TANH:
-                    output[n_filter] = 2.0f  / (1.0f + exp(-2.0f * output[n_filter])) - 1.0f;
-                    break;
-                case SIGMOID:
-                    output[n_filter] = 1.0f / (1.0f + exp(-output[n_filter]));
-                    break;
-                case NONE:
-                    break;
-                case LEAKY_RELU:
-                    output[n_filter] = FFMAX(output[n_filter], 0.0) + 0.2 * FFMIN(output[n_filter], 0.0);
-                }
-            }
-            output += conv_params->output_num;
-        }
-    }
-    return 0;
-}
-
-static int depth_to_space(DnnOperand *operands, const int32_t *input_operand_indexes, int32_t output_operand_index, int block_size)
-{
-    float *output;
-    int32_t input_operand_index = input_operand_indexes[0];
-    int number = operands[input_operand_index].dims[0];
-    int height = operands[input_operand_index].dims[1];
-    int width = operands[input_operand_index].dims[2];
-    int channels = operands[input_operand_index].dims[3];
-    const float *input = operands[input_operand_index].data;
-
-    int y, x, by, bx, ch;
-    int new_channels = channels / (block_size * block_size);
-    int output_linesize = width * channels;
-    int by_linesize = output_linesize / block_size;
-    int x_linesize = new_channels * block_size;
-
-    DnnOperand *output_operand = &operands[output_operand_index];
-    output_operand->dims[0] = number;
-    output_operand->dims[1] = height * block_size;
-    output_operand->dims[2] = width * block_size;
-    output_operand->dims[3] = new_channels;
-    output_operand->length = calculate_operand_data_length(output_operand);
-    output_operand->data = av_realloc(output_operand->data, output_operand->length);
-    if (!output_operand->data)
-        return -1;
-    output = output_operand->data;
-
-    for (y = 0; y < height; ++y){
-        for (x = 0; x < width; ++x){
-            for (by = 0; by < block_size; ++by){
-                for (bx = 0; bx < block_size; ++bx){
-                    for (ch = 0; ch < new_channels; ++ch){
-                        output[by * by_linesize + x * x_linesize + bx * new_channels + ch] = input[ch];
-                    }
-                    input += new_channels;
-                }
-            }
-        }
-        output += output_linesize;
-    }
-    return 0;
-}
-
 DNNReturnType ff_dnn_execute_model_native(const DNNModel *model, DNNData *outputs, uint32_t nb_output)
 {
     ConvolutionalNetwork *network = (ConvolutionalNetwork *)model->model;
@@ -410,6 +337,8 @@ DNNReturnType ff_dnn_execute_model_native(const DNNModel *model, DNNData *output
     ConvolutionalParams *conv_params;
     DepthToSpaceParams *depth_to_space_params;
     LayerPadParams *pad_params;
+    DnnLayerMaximumParams *maximum_params;
+    uint32_t nb = FFMIN(nb_output, network->nb_output);
 
     if (network->layers_num <= 0 || network->operands_num <= 0)
         return DNN_ERROR;
@@ -433,30 +362,40 @@ DNNReturnType ff_dnn_execute_model_native(const DNNModel *model, DNNData *output
             dnn_execute_layer_pad(network->operands, network->layers[layer].input_operand_indexes,
                                   network->layers[layer].output_operand_index, pad_params);
             break;
+        case MAXIMUM:
+            maximum_params = (DnnLayerMaximumParams *)network->layers[layer].params;
+            dnn_execute_layer_maximum(network->operands, network->layers[layer].input_operand_indexes,
+                                  network->layers[layer].output_operand_index, maximum_params);
+            break;
         case INPUT:
             return DNN_ERROR;
         }
     }
 
-    // native mode does not support multiple outputs yet
-    if (nb_output > 1)
-        return DNN_ERROR;
-
-    /**
-     * as the first step, suppose network->operands[network->operands_num - 1] is the output operand.
-     */
-    outputs[0].data = network->operands[network->operands_num - 1].data;
-    outputs[0].height = network->operands[network->operands_num - 1].dims[1];
-    outputs[0].width = network->operands[network->operands_num - 1].dims[2];
-    outputs[0].channels = network->operands[network->operands_num - 1].dims[3];
+    for (uint32_t i = 0; i < nb; ++i) {
+        DnnOperand *oprd = &network->operands[network->output_indexes[i]];
+        outputs[i].data = oprd->data;
+        outputs[i].height = oprd->dims[1];
+        outputs[i].width = oprd->dims[2];
+        outputs[i].channels = oprd->dims[3];
+    }
 
     return DNN_SUCCESS;
 }
 
-int32_t calculate_operand_data_length(DnnOperand* operand)
+int32_t calculate_operand_dims_count(const DnnOperand *oprd)
+{
+    int32_t result = 1;
+    for (int i = 0; i < 4; ++i)
+        result *= oprd->dims[i];
+
+    return result;
+}
+
+int32_t calculate_operand_data_length(const DnnOperand* oprd)
 {
     // currently, we just support DNN_FLOAT
-    return operand->dims[0] * operand->dims[1] * operand->dims[2] * operand->dims[3] * sizeof(float);
+    return oprd->dims[0] * oprd->dims[1] * oprd->dims[2] * oprd->dims[3] * sizeof(float);
 }
 
 void ff_dnn_free_model_native(DNNModel **model)
@@ -482,6 +421,7 @@ void ff_dnn_free_model_native(DNNModel **model)
             av_freep(&network->operands[operand].data);
         av_freep(&network->operands);
 
+        av_freep(&network->output_indexes);
         av_freep(&network);
         av_freep(model);
     }

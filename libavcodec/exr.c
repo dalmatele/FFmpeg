@@ -881,7 +881,7 @@ static int pxr24_uncompress(EXRContext *s, const uint8_t *src,
                 in     = ptr[3] + s->xdelta;
 
                 for (j = 0; j < s->xdelta; ++j) {
-                    uint32_t diff = (*(ptr[0]++) << 24) |
+                    uint32_t diff = ((uint32_t)*(ptr[0]++) << 24) |
                     (*(ptr[1]++) << 16) |
                     (*(ptr[2]++) << 8 ) |
                     (*(ptr[3]++));
@@ -1861,7 +1861,8 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
 #if HAVE_THREADS
 static int decode_init_thread_copy(AVCodecContext *avctx)
-{    EXRContext *s = avctx->priv_data;
+{
+    EXRContext *s = avctx->priv_data;
 
     // allocate thread data, used for non EXR_RAW compression types
     s->thread_data = av_mallocz_array(avctx->thread_count, sizeof(EXRThreadData));

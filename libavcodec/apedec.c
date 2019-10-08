@@ -1121,7 +1121,7 @@ static av_always_inline int predictor_update_filter(APEPredictor *p,
 
     p->buf[delayA]     = p->lastA[filter];
     p->buf[adaptA]     = APESIGN(p->buf[delayA]);
-    p->buf[delayA - 1] = p->buf[delayA] - p->buf[delayA - 1];
+    p->buf[delayA - 1] = p->buf[delayA] - (unsigned)p->buf[delayA - 1];
     p->buf[adaptA - 1] = APESIGN(p->buf[delayA - 1]);
 
     predictionA = p->buf[delayA    ] * p->coeffsA[filter][0] +
@@ -1132,7 +1132,7 @@ static av_always_inline int predictor_update_filter(APEPredictor *p,
     /*  Apply a scaled first-order filter compression */
     p->buf[delayB]     = p->filterA[filter ^ 1] - ((int)(p->filterB[filter] * 31U) >> 5);
     p->buf[adaptB]     = APESIGN(p->buf[delayB]);
-    p->buf[delayB - 1] = p->buf[delayB] - p->buf[delayB - 1];
+    p->buf[delayB - 1] = p->buf[delayB] - (unsigned)p->buf[delayB - 1];
     p->buf[adaptB - 1] = APESIGN(p->buf[delayB - 1]);
     p->filterB[filter] = p->filterA[filter ^ 1];
 
@@ -1266,7 +1266,7 @@ static void do_apply_filter(APEContext *ctx, int version, APEFilter *f,
                                                      f->delay - order,
                                                      f->adaptcoeffs - order,
                                                      order, APESIGN(*data));
-        res = (res + (1 << (fracbits - 1))) >> fracbits;
+        res = (int)(res + (1U << (fracbits - 1))) >> fracbits;
         res += *data;
         *data++ = res;
 
@@ -1282,7 +1282,7 @@ static void do_apply_filter(APEContext *ctx, int version, APEFilter *f,
             /* Version 3.98 and later files */
 
             /* Update the adaption coefficients */
-            absres = FFABS(res);
+            absres = res < 0 ? -(unsigned)res : res;
             if (absres)
                 *f->adaptcoeffs = APESIGN(res) *
                                   (8 << ((absres > f->avg * 3) + (absres > f->avg * 4 / 3)));
@@ -1497,17 +1497,20 @@ static int ape_decode_frame(AVCodecContext *avctx, void *data,
     /* reallocate decoded sample buffer if needed */
     decoded_buffer_size = 2LL * FFALIGN(blockstodecode, 8) * sizeof(*s->decoded_buffer);
     av_assert0(decoded_buffer_size <= INT_MAX);
+
+    /* get output buffer */
+    frame->nb_samples = blockstodecode;
+    if ((ret = ff_get_buffer(avctx, frame, 0)) < 0) {
+        s->samples=0;
+        return ret;
+    }
+
     av_fast_malloc(&s->decoded_buffer, &s->decoded_size, decoded_buffer_size);
     if (!s->decoded_buffer)
         return AVERROR(ENOMEM);
     memset(s->decoded_buffer, 0, s->decoded_size);
     s->decoded[0] = s->decoded_buffer;
     s->decoded[1] = s->decoded_buffer + FFALIGN(blockstodecode, 8);
-
-    /* get output buffer */
-    frame->nb_samples = blockstodecode;
-    if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
-        return ret;
 
     s->error=0;
 

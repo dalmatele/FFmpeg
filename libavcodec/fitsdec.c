@@ -264,6 +264,13 @@ static int fits_decode_frame(AVCodecContext *avctx, void *data, int *got_frame, 
             CASE_RGB(16, dst16, uint16_t, AV_RB16);
         }
     } else {
+        double scale = header.data_max - header.data_min;
+
+        if (scale <= 0 || !isfinite(scale)) {
+            scale = 1;
+        }
+        scale = 1/scale;
+
         switch (header.bitpix) {
 #define CASE_GRAY(cas, dst, type, t, rd) \
     case cas: \
@@ -272,7 +279,7 @@ static int fits_decode_frame(AVCodecContext *avctx, void *data, int *got_frame, 
             for (j = 0; j < avctx->width; j++) { \
                 t = rd; \
                 if (!header.blank_found || t != header.blank) { \
-                    *dst++ = ((t - header.data_min) * ((1 << (sizeof(type) * 8)) - 1)) / (header.data_max - header.data_min); \
+                    *dst++ = ((t - header.data_min) * ((1 << (sizeof(type) * 8)) - 1)) * scale; \
                 } else { \
                     *dst++ = fitsctx->blank_val; \
                 } \
