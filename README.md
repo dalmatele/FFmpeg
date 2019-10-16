@@ -30,6 +30,8 @@ The offline documentation is available in the **doc/** directory.
 The online documentation is available in the main [website](https://ffmpeg.org)
 and in the [wiki](https://trac.ffmpeg.org).
 
+https://github.com/leandromoreira/ffmpeg-libav-tutorial#transcoding
+
 ### Examples
 
 Coding examples are available in the **doc/examples** directory.
