@@ -312,6 +312,15 @@ See @code{ffmpeg -filters} to view which filters have timeline support.
 
 @c man end FILTERGRAPH DESCRIPTION
 
+@anchor{commands}
+@chapter Changing options at runtime with a command
+
+Some options can be changed during the operation of the filter using
+a command. These options are marked 'T' on the output of
+@command{ffmpeg} @option{-h filter=<name of filter>}.
+The name of the command is the name of the option and the argument is
+the new value.
+
 @anchor{framesync}
 @chapter Options for filters with several inputs (framesync)
 @c man begin OPTIONS FOR FILTERS WITH SEVERAL INPUTS
@@ -1152,6 +1161,18 @@ window function will be picked. Default is @code{0.75}.
 Leave almost only low frequencies in audio:
 @example
 afftfilt="'real=re * (1-clip((b/nb)*b,0,1))':imag='im * (1-clip((b/nb)*b,0,1))'"
+@end example
+
+@item
+Apply robotize effect:
+@example
+afftfilt="real='hypot(re,im)*sin(0)':imag='hypot(re,im)*cos(0)':win_size=512:overlap=0.75"
+@end example
+
+@item
+Apply whisper effect:
+@example
+afftfilt="real='hypot(re,im)*cos((random(0)*2-1)*2*3.14)':imag='hypot(re,im)*sin((random(1)*2-1)*2*3.14)':win_size=128:overlap=0.8"
 @end example
 @end itemize
 
@@ -2095,6 +2116,17 @@ atrim=end=5,areverse
 @end example
 @end itemize
 
+@section arnndn
+
+Reduce noise from speech using Recurrent Neural Networks.
+
+This filter accepts the following options:
+
+@table @option
+@item model, m
+Set train model file to load. This option is always required.
+@end table
+
 @section asetnsamples
 
 Set the number of samples per each output audio frame.
@@ -2416,6 +2448,15 @@ To speed up audio to 300% tempo by daisy-chaining two atempo instances:
 atempo=sqrt(3),atempo=sqrt(3)
 @end example
 @end itemize
+
+@subsection Commands
+
+This filter supports the following commands:
+@table @option
+@item tempo
+Change filter tempo scale factor.
+Syntax for the command is : "@var{tempo}"
+@end table
 
 @section atrim
 
@@ -4476,6 +4517,19 @@ Possible values are:
 @end table
 @end table
 
+@subsection Commands
+
+This filter supports the following commands:
+@table @option
+@item tempo
+Change filter tempo scale factor.
+Syntax for the command is : "@var{tempo}"
+
+@item pitch
+Change filter pitch scale factor.
+Syntax for the command is : "@var{pitch}"
+@end table
+
 @section sidechaincompress
 
 This filter acts like normal compressor but has the ability to compress
@@ -6140,6 +6194,18 @@ This option controls maximum possible value that will increase source pixel valu
 Set which planes to filter. Default is all. Allowed range is from 0 to 15.
 @end table
 
+@subsection Commands
+
+This filter supports the following @ref{commands} that corresponds to option of same name:
+@table @option
+@item factor
+@item threshold
+@item tolerance
+@item low
+@item high
+@item planes
+@end table
+
 @section ass
 
 Same as the @ref{subtitles} filter, except that it doesn't require libavcodec
@@ -7045,6 +7111,10 @@ Simulate sepia tones:
 colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131
 @end example
 @end itemize
+
+@subsection Commands
+
+This filter supports the all above options as @ref{commands}.
 
 @section colorkey
 RGB colorspace color keying.
@@ -10985,6 +11055,14 @@ red/green/blue component. Return 0 if there is no such component.
 @item alpha(x, y)
 Return the value of the pixel at location (@var{x},@var{y}) of the alpha
 plane. Return 0 if there is no such plane.
+
+@item interpolation
+Set one of interpolation methods:
+@table @option
+@item nearest, n
+@item bilinear, b
+@end table
+Default is bilinear.
 @end table
 
 For functions, if @var{x} and @var{y} are outside the area, the value will be
@@ -15784,6 +15862,16 @@ Set the initial horizontal scrolling position. Default is 0. Allowed range is fr
 Set the initial vertical scrolling position. Default is 0. Allowed range is from 0 to 1.
 @end table
 
+@subsection Commands
+
+This filter supports the following @ref{commands}:
+@table @option
+@item horizontal, h
+Set the horizontal scrolling speed.
+@item vertical, v
+Set the vertical scrolling speed.
+@end table
+
 @anchor{selectivecolor}
 @section selectivecolor
 
@@ -19052,6 +19140,9 @@ Similar as above, but shows difference between blue and red chroma.
 @item xflat
 Similar as above, but use different colors.
 
+@item yflat
+Similar as above, but again with different colors.
+
 @item chroma
 Displays only chroma.
 
@@ -19074,6 +19165,9 @@ Display green graticule showing legal broadcast ranges.
 
 @item orange
 Display orange graticule showing legal broadcast ranges.
+
+@item invert
+Display invert graticule showing legal broadcast ranges.
 @end table
 
 @item opacity, o

@@ -35,7 +35,7 @@
 #include "video.h"
 
 #define OFFSET(x) offsetof(GBlurContext, x)
-#define FLAGS AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_FILTERING_PARAM
+#define FLAGS AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_RUNTIME_PARAM
 
 static const AVOption gblur_options[] = {
     { "sigma",  "set sigma",            OFFSET(sigma),  AV_OPT_TYPE_FLOAT, {.dbl=0.5}, 0.0, 1024, FLAGS },
@@ -236,7 +236,7 @@ static int config_input(AVFilterLink *inlink)
 
     s->nb_planes = av_pix_fmt_count_planes(inlink->format);
 
-    s->buffer = av_malloc_array(inlink->w, inlink->h * sizeof(*s->buffer));
+    s->buffer = av_malloc_array(FFALIGN(inlink->w, 16), FFALIGN(inlink->h, 16) * sizeof(*s->buffer));
     if (!s->buffer)
         return AVERROR(ENOMEM);
 
@@ -344,22 +344,6 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
     return ff_filter_frame(outlink, out);
 }
 
-static int process_command(AVFilterContext *ctx, const char *cmd, const char *args,
-                           char *res, int res_len, int flags)
-{
-    GBlurContext *s = ctx->priv;
-    int ret = 0;
-
-    if (   !strcmp(cmd, "sigma") || !strcmp(cmd, "sigmaV")
-        || !strcmp(cmd, "steps") || !strcmp(cmd, "planes")) {
-        av_opt_set(s, cmd, args, 0);
-    } else {
-        ret = AVERROR(ENOSYS);
-    }
-
-    return ret;
-}
-
 static av_cold void uninit(AVFilterContext *ctx)
 {
     GBlurContext *s = ctx->priv;
@@ -395,5 +379,5 @@ AVFilter ff_vf_gblur = {
     .inputs        = gblur_inputs,
     .outputs       = gblur_outputs,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
-    .process_command = process_command,
+    .process_command = ff_filter_process_command,
 };

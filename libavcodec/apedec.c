@@ -609,6 +609,10 @@ static void decode_array_0000(APEContext *ctx, GetBitContext *gb,
     ksummax = 1 << rice->k + 7;
     ksummin = rice->k ? (1 << rice->k + 6) : 0;
     for (; i < blockstodecode; i++) {
+        if (get_bits_left(&ctx->gb) < 1) {
+            ctx->error = 1;
+            return ;
+        }
         out[i] = get_rice_ook(&ctx->gb, rice->k);
         rice->ksum += out[i] - out[i - 64];
         while (rice->ksum < ksummin) {
@@ -1364,6 +1368,8 @@ static void ape_unpack_mono(APEContext *ctx, int count)
     }
 
     ctx->entropy_decode_mono(ctx, count);
+    if (ctx->error)
+        return;
 
     /* Now apply the predictor decoding */
     ctx->predictor_decode_mono(ctx, count);
@@ -1387,6 +1393,8 @@ static void ape_unpack_stereo(APEContext *ctx, int count)
     }
 
     ctx->entropy_decode_stereo(ctx, count);
+    if (ctx->error)
+        return;
 
     /* Now apply the predictor decoding */
     ctx->predictor_decode_stereo(ctx, count);

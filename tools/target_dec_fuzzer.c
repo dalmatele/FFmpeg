@@ -109,6 +109,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
                           int *got_picture_ptr,
                           const AVPacket *avpkt) = NULL;
     AVCodecParserContext *parser = NULL;
+    uint64_t keyframes = 0;
 
 
     if (!c) {
@@ -171,6 +172,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     if (size > 1024) {
         GetByteContext gbc;
         int extradata_size;
+        int flags;
         size -= 1024;
         bytestream2_init(&gbc, data + size, 1024);
         ctx->width                              = bytestream2_get_le32(&gbc);
@@ -178,13 +180,19 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         ctx->bit_rate                           = bytestream2_get_le64(&gbc);
         ctx->bits_per_coded_sample              = bytestream2_get_le32(&gbc);
         // Try to initialize a parser for this codec, note, this may fail which just means we test without one
-        if (bytestream2_get_byte(&gbc) & 1)
+        flags = bytestream2_get_byte(&gbc);
+        if (flags & 1)
             parser = av_parser_init(c->id);
+        if (flags & 2)
+            ctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 
         extradata_size = bytestream2_get_le32(&gbc);
 
         ctx->sample_rate                        = bytestream2_get_le32(&gbc);
         ctx->channels                           = (unsigned)bytestream2_get_le32(&gbc) % FF_SANE_NB_CHANNELS;
+        ctx->block_align                        = bytestream2_get_le32(&gbc);
+        ctx->codec_tag                          = bytestream2_get_le32(&gbc);
+        keyframes                               = bytestream2_get_le64(&gbc);
 
         if (extradata_size < size) {
             ctx->extradata = av_mallocz(extradata_size + AV_INPUT_BUFFER_PADDING_SIZE);
@@ -230,6 +238,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         if (res < 0)
             error("Failed memory allocation");
         memcpy(parsepkt.data, last, data - last);
+        parsepkt.flags = (keyframes & 1) * AV_PKT_FLAG_DISCARD + (!!(keyframes & 2)) * AV_PKT_FLAG_KEY;
+        keyframes = (keyframes >> 2) + (keyframes<<62);
         data += sizeof(fuzz_tag);
         last = data;
 

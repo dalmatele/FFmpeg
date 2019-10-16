@@ -18,27 +18,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-/**
- * @file
- * DNN inference functions interface for native backend.
- */
+#ifndef AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYERS_H
+#define AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYERS_H
 
-
-#ifndef AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYER_MAXIMUM_H
-#define AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYER_MAXIMUM_H
-
-#include "libavformat/avio.h"
+#include <stdint.h>
 #include "dnn_backend_native.h"
 
-typedef struct DnnLayerMaximumParams{
-    union {
-        uint32_t u32;
-        float y;
-    }val;
-} DnnLayerMaximumParams;
+typedef int (*LAYER_EXEC_FUNC)(DnnOperand *operands, const int32_t *input_operand_indexes,
+                               int32_t output_operand_index, const void *parameters);
+typedef int (*LAYER_LOAD_FUNC)(Layer *layer, AVIOContext *model_file_context, int file_size);
 
-int dnn_load_layer_maximum(Layer *layer, AVIOContext *model_file_context, int file_size);
-int dnn_execute_layer_maximum(DnnOperand *operands, const int32_t *input_operand_indexes,
-                              int32_t output_operand_index, const void *parameters);
+typedef struct LayerFunc {
+    LAYER_EXEC_FUNC pf_exec;
+    LAYER_LOAD_FUNC pf_load;
+}LayerFunc;
+
+extern LayerFunc layer_funcs[DLT_COUNT];
 
 #endif

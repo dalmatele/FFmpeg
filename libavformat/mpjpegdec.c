@@ -267,7 +267,7 @@ static char* mpjpeg_get_boundary(AVIOContext* pb)
         while (av_isspace(*start))
             start++;
 
-        if (!av_stristart(start, "boundary=", &start)) {
+        if (av_stristart(start, "boundary=", &start)) {
             end = strchr(start, ';');
             if (end)
                 len = end - start - 1;
@@ -302,8 +302,9 @@ static int mpjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
             boundary = mpjpeg_get_boundary(s->pb);
         }
         if (boundary != NULL) {
-            mpjpeg->boundary = boundary;
-            mpjpeg->searchstr = av_asprintf( "\r\n%s\r\n", boundary );
+            mpjpeg->boundary = av_asprintf("--%s", boundary);
+            mpjpeg->searchstr = av_asprintf("\r\n--%s\r\n", boundary);
+            av_freep(&boundary);
         } else {
             mpjpeg->boundary = av_strdup("--");
             mpjpeg->searchstr = av_strdup("\r\n--");
@@ -335,10 +336,8 @@ static int mpjpeg_read_packet(AVFormatContext *s, AVPacket *pkt)
         pkt->size = 0;
         pkt->pos  = avio_tell(s->pb);
 
-        /* we may need to return as much as all we've read back to the buffer */
-        ffio_ensure_seekback(s->pb, read_chunk);
-
-        while ((ret = av_append_packet(s->pb, pkt, read_chunk - remaining)) >= 0) {
+        while ((ret = ffio_ensure_seekback(s->pb, read_chunk - remaining)) >= 0 && /* we may need to return as much as all we've read back to the buffer */
+               (ret = av_append_packet(s->pb, pkt, read_chunk - remaining)) >= 0) {
             /* scan the new data */
             char *start;
 
