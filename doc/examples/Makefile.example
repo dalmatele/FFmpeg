@@ -30,6 +30,8 @@ EXAMPLES=       avio_dir_cmd                       \
                 scaling_video                      \
                 transcode_aac                      \
                 transcoding                        \
+                hello_world                        \
+                1_remux                            \
 
 OBJS=$(addsuffix .o,$(EXAMPLES))
 
