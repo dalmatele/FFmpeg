@@ -22,7 +22,7 @@ EXAMPLES-$(CONFIG_TRANSCODING_EXAMPLE)       += transcoding
 EXAMPLES-$(CONFIG_VAAPI_ENCODE_EXAMPLE)      += vaapi_encode
 EXAMPLES-$(CONFIG_VAAPI_TRANSCODE_EXAMPLE)   += vaapi_transcode
 EXAMPLES-${CONFIG_HELLO_WORLD_EXAMPLE}	    += hello_world
-EXAMPLES-${CONFIG_1_REMUX_EXAMPLE}	    += 1_remux
+EXAMPLES-${CONFIG_REMUX_EXAMPLE}		    += remux
 
 EXAMPLES       := $(EXAMPLES-yes:%=doc/examples/%$(PROGSSUF)$(EXESUF))
 EXAMPLES_G     := $(EXAMPLES-yes:%=doc/examples/%$(PROGSSUF)_g$(EXESUF))
