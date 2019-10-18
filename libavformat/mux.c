@@ -252,7 +252,6 @@ static int init_muxer(AVFormatContext *s, AVDictionary **options)
 
     if (options)
         av_dict_copy(&tmp, *options, 0);
-
     if ((ret = av_opt_set_dict(s, &tmp)) < 0)
         goto fail;
     if (s->priv_data && s->oformat->priv_class && *(const AVClass**)s->priv_data==s->oformat->priv_class &&
@@ -307,7 +306,7 @@ FF_DISABLE_DEPRECATION_WARNINGS
         }
 FF_ENABLE_DEPRECATION_WARNINGS
 #endif
-
+         
         if (!st->time_base.num) {
             /* fall back on the default timebase values */
             if (par->codec_type == AVMEDIA_TYPE_AUDIO && par->sample_rate)
@@ -315,7 +314,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
             else
                 avpriv_set_pts_info(st, 33, 1, 90000);
         }
-
         switch (par->codec_type) {
         case AVMEDIA_TYPE_AUDIO:
             if (par->sample_rate <= 0) {
@@ -352,7 +350,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
             }
             break;
         }
-
         desc = avcodec_descriptor_get(par->codec_id);
         if (desc && desc->props & AV_CODEC_PROP_REORDER)
             st->internal->reorder = 1;
@@ -383,7 +380,6 @@ FF_ENABLE_DEPRECATION_WARNINGS
         if (par->codec_type != AVMEDIA_TYPE_ATTACHMENT)
             s->internal->nb_interleaved_streams++;
     }
-
     if (!s->priv_data && of->priv_data_size > 0) {
         s->priv_data = av_mallocz(of->priv_data_size);
         if (!s->priv_data) {
@@ -397,32 +393,28 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 goto fail;
         }
     }
-
     /* set muxer identification string */
     if (!(s->flags & AVFMT_FLAG_BITEXACT)) {
         av_dict_set(&s->metadata, "encoder", LIBAVFORMAT_IDENT, 0);
     } else {
         av_dict_set(&s->metadata, "encoder", NULL, 0);
     }
-
     for (e = NULL; e = av_dict_get(s->metadata, "encoder-", e, AV_DICT_IGNORE_SUFFIX); ) {
         av_dict_set(&s->metadata, e->key, NULL, 0);
     }
-
     if (options) {
          av_dict_free(options);
          *options = tmp;
     }
-
+      
     if (s->oformat->init) {
         if ((ret = s->oformat->init(s)) < 0) {
             if (s->oformat->deinit)
-                s->oformat->deinit(s);
+                s->oformat->deinit(s); 
             return ret;
         }
         return ret == 0;
     }
-
     return 0;
 
 fail:
@@ -487,11 +479,10 @@ static void flush_if_needed(AVFormatContext *s)
 
 int avformat_init_output(AVFormatContext *s, AVDictionary **options)
 {
-    int ret = 0;
-
+    int ret = 0;    
     if ((ret = init_muxer(s, options)) < 0)
         return ret;
-
+    av_log(NULL, AV_LOG_WARNING, "mux - 493\n");
     s->internal->initialized = 1;
     s->internal->streams_initialized = ret;
 
@@ -501,22 +492,22 @@ int avformat_init_output(AVFormatContext *s, AVDictionary **options)
 
         return AVSTREAM_INIT_IN_INIT_OUTPUT;
     }
-
+    av_log(NULL, AV_LOG_WARNING, "c\n");
     return AVSTREAM_INIT_IN_WRITE_HEADER;
 }
 
 int avformat_write_header(AVFormatContext *s, AVDictionary **options)
-{
+{    
     int ret = 0;
     int already_initialized = s->internal->initialized;
     int streams_already_initialized = s->internal->streams_initialized;
-
     if (!already_initialized)
         if ((ret = avformat_init_output(s, options)) < 0)
             return ret;
-
+    av_log(NULL, AV_LOG_WARNING, "mux - 516\n");
     if (!(s->oformat->flags & AVFMT_NOFILE) && s->pb)
         avio_write_marker(s->pb, AV_NOPTS_VALUE, AVIO_DATA_MARKER_HEADER);
+    av_log(NULL, AV_LOG_WARNING, "mux - 519\n");
     if (s->oformat->write_header) {
         ret = s->oformat->write_header(s);
         if (ret >= 0 && s->pb && s->pb->error < 0)
@@ -525,6 +516,7 @@ int avformat_write_header(AVFormatContext *s, AVDictionary **options)
             goto fail;
         flush_if_needed(s);
     }
+    av_log(NULL, AV_LOG_WARNING, "mux - 528\n");
     if (!(s->oformat->flags & AVFMT_NOFILE) && s->pb)
         avio_write_marker(s->pb, AV_NOPTS_VALUE, AVIO_DATA_MARKER_UNKNOWN);
 
@@ -532,7 +524,7 @@ int avformat_write_header(AVFormatContext *s, AVDictionary **options)
         if ((ret = init_pts(s)) < 0)
             goto fail;
     }
-
+    av_log(NULL, AV_LOG_WARNING, "mux-536\n");
     return streams_already_initialized;
 
 fail:

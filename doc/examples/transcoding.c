@@ -139,16 +139,20 @@ static int open_output_file(const char *filename)
                 || dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
             /* in this example, we choose transcoding to same codec */
             encoder = avcodec_find_encoder(dec_ctx->codec_id);
+//            encoder = avcodec_find_encoder(AV_CODEC_ID_H264);
+            av_log(NULL, AV_LOG_WARNING, "transcoding - 143\n");
             if (!encoder) {
-                av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found\n");
+                av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found: %s\n", dec_ctx->codec->name);
                 return AVERROR_INVALIDDATA;
             }
+            av_log(NULL, AV_LOG_WARNING, "transcoding - 148\n");
             enc_ctx = avcodec_alloc_context3(encoder);
+            av_log(NULL, AV_LOG_WARNING, "transcoding - 150\n");
             if (!enc_ctx) {
                 av_log(NULL, AV_LOG_FATAL, "Failed to allocate the encoder context\n");
                 return AVERROR(ENOMEM);
             }
-
+            av_log(NULL, AV_LOG_WARNING, "transcoding - 155\n");
             /* In this example, we transcode to same properties (picture size,
              * sample rate etc.). These properties can be changed for output
              * streams easily using filters */
@@ -162,16 +166,21 @@ static int open_output_file(const char *filename)
                 else
                     enc_ctx->pix_fmt = dec_ctx->pix_fmt;
                 /* video time_base can be set to whatever is handy and supported by encoder */
+                av_log(NULL, AV_LOG_WARNING, "transcoding - 169\n");
                 enc_ctx->time_base = av_inv_q(dec_ctx->framerate);
+                av_log(NULL, AV_LOG_WARNING, "transcoding - 171\n");
             } else {
                 enc_ctx->sample_rate = dec_ctx->sample_rate;
                 enc_ctx->channel_layout = dec_ctx->channel_layout;
+                av_log(NULL, AV_LOG_WARNING, "transcoding - 175\n");
                 enc_ctx->channels = av_get_channel_layout_nb_channels(enc_ctx->channel_layout);
+                av_log(NULL, AV_LOG_WARNING, "transcoding - 177\n");
                 /* take first format from list of supported formats */
                 enc_ctx->sample_fmt = encoder->sample_fmts[0];
                 enc_ctx->time_base = (AVRational){1, enc_ctx->sample_rate};
+                av_log(NULL, AV_LOG_WARNING, "transcoding - 181\n");
             }
-
+            av_log(NULL, AV_LOG_WARNING, "transcoding - 183\n");
             if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
                 enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
@@ -203,8 +212,9 @@ static int open_output_file(const char *filename)
         }
 
     }
+    av_log(NULL, AV_LOG_WARNING, "transcoding - 208");
     av_dump_format(ofmt_ctx, 0, filename, 1);
-
+    av_log(NULL, AV_LOG_WARNING, "transcoding - 209");
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         ret = avio_open(&ofmt_ctx->pb, filename, AVIO_FLAG_WRITE);
         if (ret < 0) {
