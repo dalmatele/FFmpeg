@@ -16,6 +16,8 @@
 
 #include "libavformat/avformat.h"
 
+static void logging(const char *fmt, ...);
+
 /*
  * 
  */
@@ -29,22 +31,22 @@ int main(int argc, char** argv) {
     int number_of_streams = 0;
     int fragmented_mp4_options = 0;
     if(argc < 3){
-        printf("You need to pass at least two parameters.\n");
+        logging("You need to pass at least two parameters.\n");
         return -1;
     }
     in_filename = argv[1];
     out_filename = argv[2];
     if((ret = avformat_open_input(&input_format_context, in_filename, NULL, NULL)) < 0){
-        fprintf(stderr, "Could not open input file '%s'", in_filename);
+        logging("Could not open input file '%s'", in_filename);
         goto end;
     }
     if((ret = avformat_find_stream_info(input_format_context, NULL)) < 0){
-        fprintf(stderr, "Failed to retrieve input stream information.\n");
+        logging("Failed to retrieve input stream information.\n");
         goto end;
     }
     avformat_alloc_output_context2(&output_format_context, NULL, NULL, out_filename);
     if(!output_format_context){
-        fprintf(stderr, "Could not create output context\n");
+        logging("Could not create output context\n");
         goto end;
     }
     number_of_streams = input_format_context->nb_streams;
@@ -67,13 +69,13 @@ int main(int argc, char** argv) {
         stream_list[i] = stream_index++;
         out_stream = avformat_new_stream(output_format_context, NULL);
         if(!out_stream){
-            fprintf(stderr, "Failed allocating output stream.\n");
+            logging("Failed allocating output stream.\n");
             ret = AVERROR_UNKNOWN;
             goto end;
         }
         ret = avcodec_parameters_copy(out_stream->codecpar, in_codecpar);
         if(ret < 0){
-            fprintf(stderr, "Failed to copy codec parameters\n");
+            logging("Failed to copy codec parameters\n");
             goto end;
         }
     }
@@ -81,7 +83,7 @@ int main(int argc, char** argv) {
     if(!(output_format_context->oformat->flags && AVFMT_NOFILE)){
         ret = avio_open(&output_format_context->pb, out_filename, AVIO_FLAG_WRITE);
         if(ret < 0){
-            fprintf(stderr, "Could not open output file '%s'", out_filename);
+            logging("Could not open output file '%s'", out_filename);
             goto end;
         }
     }
@@ -91,7 +93,7 @@ int main(int argc, char** argv) {
     }
     ret = avformat_write_header(output_format_context, &opts);
     if(ret < 0){
-        fprintf(stderr, "Error occured when opening output file.\n");
+        logging("Error occured when opening output file.\n");
         goto end;
     }
     while(1){
@@ -114,7 +116,7 @@ int main(int argc, char** argv) {
         packet.pos = -1;
         ret = av_interleaved_write_frame(output_format_context, &packet);
         if(ret < 0){
-            fprintf(stderr, "Error muxing packet.\n");
+            logging("Error muxing packet.\n");
             break;
         }
         av_packet_unref(&packet);
@@ -128,9 +130,17 @@ int main(int argc, char** argv) {
     avformat_free_context(output_format_context);
     av_freep(&stream_list);
     if(ret < 0 && ret != AVERROR_EOF){
-        fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
+        logging("Error occurred: %s\n", av_err2str(ret));
         return 1;
     }
     return (EXIT_SUCCESS);
 }
 
+static void logging(const char *fmt, ...){
+    va_list args;
+    fprintf(stderr, "LOG: ");
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+    fprintf(stderr, "\n");
+}
