@@ -1,4 +1,8 @@
 // based on https://ffmpeg.org/doxygen/trunk/remuxing_8c-example.html
+/**
+ * How to run it?
+ * After building, you can run ./hls_enc big_buck_bunny.webm test.mp4
+ */
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 

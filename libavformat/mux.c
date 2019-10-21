@@ -481,8 +481,7 @@ int avformat_init_output(AVFormatContext *s, AVDictionary **options)
 {
     int ret = 0;    
     if ((ret = init_muxer(s, options)) < 0)
-        return ret;
-    av_log(NULL, AV_LOG_WARNING, "mux - 493\n");
+        return ret;    
     s->internal->initialized = 1;
     s->internal->streams_initialized = ret;
 
@@ -503,11 +502,9 @@ int avformat_write_header(AVFormatContext *s, AVDictionary **options)
     int streams_already_initialized = s->internal->streams_initialized;
     if (!already_initialized)
         if ((ret = avformat_init_output(s, options)) < 0)
-            return ret;
-    av_log(NULL, AV_LOG_WARNING, "mux - 516\n");
+            return ret;    
     if (!(s->oformat->flags & AVFMT_NOFILE) && s->pb)
-        avio_write_marker(s->pb, AV_NOPTS_VALUE, AVIO_DATA_MARKER_HEADER);
-    av_log(NULL, AV_LOG_WARNING, "mux - 519\n");
+        avio_write_marker(s->pb, AV_NOPTS_VALUE, AVIO_DATA_MARKER_HEADER);    
     if (s->oformat->write_header) {
         ret = s->oformat->write_header(s);
         if (ret >= 0 && s->pb && s->pb->error < 0)
