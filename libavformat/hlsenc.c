@@ -2161,7 +2161,7 @@ static int hls_write_header(AVFormatContext *s)
     HLSContext *hls = s->priv_data;
     int ret, i, j;
     VariantStream *vs = NULL;
-
+    av_log(s, AV_LOG_WARNING, "hlsenc - 2164 %d", hls->segment_type);
     for (i = 0; i < hls->nb_varstreams; i++) {
         vs = &hls->var_streams[i];
 
@@ -2645,6 +2645,7 @@ static int hls_init(AVFormatContext *s)
     int i = 0;
     int j = 0;
     HLSContext *hls = s->priv_data;
+    av_log(s, AV_LOG_ERROR, "hlsenc-2648 %d\n",hls->segment_type);
     const char *pattern = "%d.ts";
     VariantStream *vs = NULL;
     int basename_size = 0;

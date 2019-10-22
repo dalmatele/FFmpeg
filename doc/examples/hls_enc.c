@@ -76,6 +76,11 @@ int main(int argc, char **argv) {
         ret = AVERROR_UNKNOWN;
         goto end;
     }
+    ret = av_opt_set(output_codec_context, "segment_filename", "%d.m4s", 0);
+    logging("80 %s\n", av_err2str(ret));
+    av_opt_set(output_codec_context, "segment_type", "1", AV_OPT_TYPE_INT);
+    av_opt_set(output_codec_context, "version", "6", AV_OPT_TYPE_INT);
+    av_opt_set(output_codec_context, "time", "5", AV_OPT_TYPE_INT);
     for (i = 0; i < input_format_context->nb_streams; i++) {
         AVStream *out_stream;
         AVStream *in_stream = input_format_context->streams[i];
@@ -126,8 +131,9 @@ int main(int argc, char **argv) {
             output_codec_context->gop_size = 10;
             output_codec_context->max_b_frames = 1;
             output_codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
-            av_opt_set(output_codec_context->priv_data, "preset", "slow", 0);
-//            av_opt_set(output_codec_context->priv_data, "segment_filename", "%d.ts", 0);
+            ret = av_opt_set(output_codec_context->priv_data, "preset", "slow", 0);        
+            logging("135 %s\n", av_err2str(ret));
+//            av_opt_set(output_codec_context->priv_data, "hls_segment_type", "fmp4", 0);
             if (avcodec_open2(output_codec_context, output_codec, NULL) < 0) {
                 logging("Could not open codec");
                 goto end;
@@ -169,8 +175,7 @@ int main(int argc, char **argv) {
     if (fragmented_mp4_options) {
         // https://developer.mozilla.org/en-US/docs/Web/API/Media_Source_Extensions_API/Transcoding_assets_for_MSE
         av_dict_set(&opts, "movflags", "frag_keyframe+empty_moov+default_base_moof", 0);
-    }
-
+    }    
     AVOutputFormat *av_output_format;
     //we get ff_hls_muxer;
     av_output_format = av_guess_format("hls", NULL, NULL);
@@ -179,16 +184,18 @@ int main(int argc, char **argv) {
         ret = AVERROR_MUXER_NOT_FOUND;
         return ret;
     }
-
+    
+    
     output_format_context->oformat = av_output_format;
     if (ret < 0) {
         return ret;
-    }
-
-    // https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb   
-    logging("185\n");
-    ret = avformat_write_header(output_format_context, &opts);
-    logging("187\n");
+    }    
+    // https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb  
+    logging("191 %s\n", output_format_context->oformat->name);
+    //this option can be found in this link https://ffmpeg.org/ffmpeg-formats.html#Options-5
+    ret = av_opt_set(output_format_context->priv_data, "hls_segment_type", "mpegts", 0);        
+    logging("192 %s\n", av_err2str(ret));
+    ret = avformat_write_header(output_format_context, &opts);        
     if (ret < 0) {
         logging("Error occurred when opening output file\n");
         goto end;
