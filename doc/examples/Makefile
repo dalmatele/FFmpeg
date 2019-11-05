@@ -24,6 +24,7 @@ EXAMPLES-$(CONFIG_VAAPI_TRANSCODE_EXAMPLE)   += vaapi_transcode
 EXAMPLES-${CONFIG_HELLO_WORLD_EXAMPLE}	    += hello_world
 EXAMPLES-${CONFIG_REMUX_EXAMPLE}		    += remux
 EXAMPLES-${CONFIG_HLS_ENC_EXAMPLE}	    += hls_enc
+EXAMPLES-${CONFIG_VIDEO_AUDIO_TRANSCODE_EXAMPLE}	    += video_audio_transcode
 
 EXAMPLES       := $(EXAMPLES-yes:%=doc/examples/%$(PROGSSUF)$(EXESUF))
 EXAMPLES_G     := $(EXAMPLES-yes:%=doc/examples/%$(PROGSSUF)_g$(EXESUF))

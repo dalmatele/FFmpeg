@@ -1688,6 +1688,7 @@ EXAMPLE_LIST="
     hello_world_example
     remux_example
     hls_enc_example
+    video_audio_transcode_example
 "
 
 EXTERNAL_AUTODETECT_LIBRARY_LIST="
@@ -3598,6 +3599,7 @@ vaapi_transcode_example_deps="avcodec avformat avutil h264_vaapi_encoder"
 hello_world_example_deps="avformat"
 remux_example_deps="avcodec avformat avutil"
 hls_enc_example_deps="avcodec avformat avutil"
+video_audio_transcode_example_deps="avcodec avformat avutil"
 
 # EXTRALIBS_LIST
 cpu_init_extralibs="pthreads_extralibs"

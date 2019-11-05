@@ -33,6 +33,7 @@ EXAMPLES=       avio_dir_cmd                       \
                 hello_world                        \
                 remux                            \
                 hls_enc                            \
+                video_audio_transcode               \
 
 OBJS=$(addsuffix .o,$(EXAMPLES))
 

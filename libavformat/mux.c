@@ -499,8 +499,7 @@ int avformat_write_header(AVFormatContext *s, AVDictionary **options)
 {    
     int ret = 0;
     int already_initialized = s->internal->initialized;
-    int streams_already_initialized = s->internal->streams_initialized;
-    av_log(NULL, AV_LOG_WARNING, "mux - 503: %d\n", already_initialized);
+    int streams_already_initialized = s->internal->streams_initialized;    
     if (!already_initialized)
         if ((ret = avformat_init_output(s, options)) < 0)
             return ret;    
@@ -520,8 +519,7 @@ int avformat_write_header(AVFormatContext *s, AVDictionary **options)
     if (!s->internal->streams_initialized) {
         if ((ret = init_pts(s)) < 0)
             goto fail;
-    }
-    av_log(NULL, AV_LOG_WARNING, "mux-536\n");
+    }    
     return streams_already_initialized;
 
 fail:
