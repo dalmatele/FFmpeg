@@ -4120,6 +4120,12 @@ static int get_input_packet_mt(InputFile *f, AVPacket *pkt)
 }
 #endif
 
+/**
+ * Read frame from the input/inputs
+ * @param f
+ * @param pkt
+ * @return 
+ */
 static int get_input_packet(InputFile *f, AVPacket *pkt)
 {
     if (f->rate_emu) {
@@ -4831,8 +4837,7 @@ static void log_callback_null(void *ptr, int level, const char *fmt, va_list vl)
 }
 
 int main(int argc, char **argv)
-{
-    av_log(NULL, AV_LOG_WARNING, "Run ffmpeg\n");
+{    
     int i, ret;
     BenchmarkTimeStamps ti;
 
