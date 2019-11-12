@@ -300,6 +300,11 @@ static RNNModel *rnnoise_model_from_file(FILE *f)
     INPUT_DENSE(denoise_output);
     INPUT_DENSE(vad_output);
 
+    if (vad_output->nb_neurons != 1) {
+        rnnoise_model_free(ret);
+        return NULL;
+    }
+
     return ret;
 }
 
@@ -777,8 +782,8 @@ static float compute_pitch_gain(float xy, float xx, float yy)
 }
 
 static const int second_check[16] = {0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2};
-static const float remove_doubling(float *x, int maxperiod, int minperiod,
-                                   int N, int *T0_, int prev_period, float prev_gain)
+static float remove_doubling(float *x, int maxperiod, int minperiod, int N,
+                             int *T0_, int prev_period, float prev_gain)
 {
     int k, i, T, T0;
     float g, g0;

@@ -720,7 +720,7 @@ static int vobsub_read_header(AVFormatContext *s)
     int i, ret = 0, header_parsed = 0, langidx = 0;
     MpegDemuxContext *vobsub = s->priv_data;
     size_t fname_len;
-    char *header_str;
+    char *header_str = NULL;
     AVBPrint header;
     int64_t delay = 0;
     AVStream *st = NULL;
@@ -769,7 +769,7 @@ static int vobsub_read_header(AVFormatContext *s)
         goto end;
     }
 
-    av_bprint_init(&header, 0, AV_BPRINT_SIZE_UNLIMITED);
+    av_bprint_init(&header, 0, INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE);
     while (!avio_feof(s->pb)) {
         char line[MAX_LINE_SIZE];
         int len = ff_get_line(s->pb, line, sizeof(line));
@@ -896,13 +896,16 @@ static int vobsub_read_header(AVFormatContext *s)
     }
     av_bprint_finalize(&header, &header_str);
     for (i = 0; i < s->nb_streams; i++) {
-        AVStream *sub_st = s->streams[i];
-        sub_st->codecpar->extradata      = av_strdup(header_str);
-        sub_st->codecpar->extradata_size = header.len;
+        AVCodecParameters *par = s->streams[i]->codecpar;
+        ret = ff_alloc_extradata(par, header.len);
+        if (ret < 0) {
+            goto end;
+        }
+        memcpy(par->extradata, header_str, header.len);
     }
-    av_free(header_str);
-
 end:
+
+    av_free(header_str);
     return ret;
 }
 

@@ -342,7 +342,7 @@ static inline int16_t adpcm_ima_oki_expand_nibble(ADPCMChannelStatus *c, int nib
     c->predictor = av_clip_intp2(predictor, 11);
     c->step_index = step_index;
 
-    return c->predictor << 4;
+    return c->predictor * 16;
 }
 
 static inline int16_t adpcm_ct_expand_nibble(ADPCMChannelStatus *c, int8_t nibble)
@@ -1231,8 +1231,11 @@ static int adpcm_decode_frame(AVCodecContext *avctx, void *data,
                 return AVERROR_INVALIDDATA;
             }
         }
-        for (i=0; i<=st; i++)
+        for (i=0; i<=st; i++) {
             c->status[i].predictor  = bytestream2_get_le32u(&gb);
+            if (FFABS(c->status[i].predictor) > (1<<16))
+                return AVERROR_INVALIDDATA;
+        }
 
         for (n = nb_samples >> (1 - st); n > 0; n--) {
             int byte   = bytestream2_get_byteu(&gb);
@@ -1380,10 +1383,10 @@ static int adpcm_decode_frame(AVCodecContext *avctx, void *data,
 
                     for (count2=0; count2<28; count2++) {
                         if (count2 & 1)
-                            next_sample = sign_extend(byte,    4) << shift;
+                            next_sample = (unsigned)sign_extend(byte,    4) << shift;
                         else {
                             byte = bytestream2_get_byte(&gb);
-                            next_sample = sign_extend(byte >> 4, 4) << shift;
+                            next_sample = (unsigned)sign_extend(byte >> 4, 4) << shift;
                         }
 
                         next_sample += (current_sample  * coeff1) +
@@ -1720,7 +1723,7 @@ static int adpcm_decode_frame(AVCodecContext *avctx, void *data,
                     else
                         sampledat = sign_extend(byte >> 4, 4);
 
-                    sampledat = (((sampledat << 12) >> (header & 0xf)) << 6) + prev;
+                    sampledat = ((sampledat * (1 << 12)) >> (header & 0xf)) * (1 << 6) + prev;
                     *samples++ = av_clip_int16(sampledat >> 6);
                     c->status[channel].sample2 = c->status[channel].sample1;
                     c->status[channel].sample1 = sampledat;

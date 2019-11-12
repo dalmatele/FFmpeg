@@ -35,6 +35,7 @@ typedef struct FloodfillContext {
 
     int x, y;
     int s[4];
+    int S[4];
     int d[4];
 
     int nb_planes;
@@ -293,25 +294,29 @@ static int filter_frame(AVFilterLink *link, AVFrame *frame)
     const int h = frame->height;
     int i, ret;
 
-    for (i = 0; i < s->nb_planes; i++) {
-        if (s->s[i] != s->d[i])
-            break;
-    }
-
-    if (i == s->nb_planes)
-        goto end;
-
-    if (ret = av_frame_make_writable(frame))
-        return ret;
-
     if (is_inside(s->x, s->y, w, h)) {
         s->pick_pixel(frame, s->x, s->y, &s0, &s1, &s2, &s3);
+
+        s->S[0] = s0;
+        s->S[1] = s1;
+        s->S[2] = s2;
+        s->S[3] = s3;
+        for (i = 0; i < s->nb_planes; i++) {
+            if (s->S[i] != s->d[i])
+                break;
+        }
+
+        if (i == s->nb_planes)
+            goto end;
 
         if (s->is_same(frame, s->x, s->y, s0, s1, s2, s3)) {
             s->points[s->front].x = s->x;
             s->points[s->front].y = s->y;
             s->front++;
         }
+
+        if (ret = av_frame_make_writable(frame))
+            return ret;
 
         while (s->front > s->back) {
             int x, y;
@@ -353,28 +358,13 @@ end:
 static av_cold int query_formats(AVFilterContext *ctx)
 {
     static const enum AVPixelFormat pixel_fmts[] = {
-        AV_PIX_FMT_GRAY8,
-        AV_PIX_FMT_YUV444P,
-        AV_PIX_FMT_YUVA444P,
-        AV_PIX_FMT_GBRP,
-        AV_PIX_FMT_GBRP9,
-        AV_PIX_FMT_GBRP10,
-        AV_PIX_FMT_GBRAP10,
-        AV_PIX_FMT_GBRP12,
-        AV_PIX_FMT_GBRAP12,
-        AV_PIX_FMT_GBRP14,
-        AV_PIX_FMT_GBRP16,
-        AV_PIX_FMT_GBRAP16,
-        AV_PIX_FMT_GBRAP,
-        AV_PIX_FMT_YUV444P9,
-        AV_PIX_FMT_YUVA444P9,
-        AV_PIX_FMT_YUV444P10,
-        AV_PIX_FMT_YUVA444P10,
-        AV_PIX_FMT_YUV444P12,
-        AV_PIX_FMT_YUV444P14,
-        AV_PIX_FMT_GRAY16,
-        AV_PIX_FMT_YUV444P16,
-        AV_PIX_FMT_YUVA444P16,
+        AV_PIX_FMT_GRAY8, AV_PIX_FMT_GRAY9, AV_PIX_FMT_GRAY10, AV_PIX_FMT_GRAY14, AV_PIX_FMT_GRAY16,
+        AV_PIX_FMT_YUV444P, AV_PIX_FMT_YUVA444P,
+        AV_PIX_FMT_GBRP, AV_PIX_FMT_GBRP9, AV_PIX_FMT_GBRP10, AV_PIX_FMT_GBRAP10,
+        AV_PIX_FMT_GBRP12, AV_PIX_FMT_GBRAP12, AV_PIX_FMT_GBRP14, AV_PIX_FMT_GBRP16,
+        AV_PIX_FMT_GBRAP16, AV_PIX_FMT_GBRAP,
+        AV_PIX_FMT_YUV444P9, AV_PIX_FMT_YUVA444P9, AV_PIX_FMT_YUV444P10, AV_PIX_FMT_YUVA444P10,
+        AV_PIX_FMT_YUV444P12, AV_PIX_FMT_YUV444P14, AV_PIX_FMT_YUV444P16, AV_PIX_FMT_YUVA444P16,
         AV_PIX_FMT_NONE
     };
     AVFilterFormats *formats;

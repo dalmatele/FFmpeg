@@ -16,6 +16,12 @@ version <next>:
 - photosensitivity filter
 - anlms filter
 - arnndn filter
+- bilateral filter
+- maskedmin and maskedmax filters
+- VDPAU VP9 hwaccel
+- median filter
+- QSV-accelerated VP9 encoding
+- AV1 encoding support via librav1e
 
 
 version 4.2:

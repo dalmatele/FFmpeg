@@ -885,7 +885,7 @@ static av_always_inline int filter_3800(APEPredictor *p,
     p->coeffsB[filter][1] -= (((d4 >> 30) & 2) - 1) * sign;
 
     p->filterB[filter] = p->lastA[filter] + (predictionB >> shift);
-    p->filterA[filter] = p->filterB[filter] + ((int)(p->filterA[filter] * 31U) >> 5);
+    p->filterA[filter] = p->filterB[filter] + (unsigned)((int)(p->filterA[filter] * 31U) >> 5);
 
     return p->filterA[filter];
 }
@@ -920,7 +920,8 @@ static void long_filter_ehigh_3830(int32_t *buffer, int length)
 {
     int i, j;
     int32_t dotprod, sign;
-    int32_t coeffs[8] = { 0 }, delay[8] = { 0 };
+    int32_t delay[8] = { 0 };
+    uint32_t coeffs[8] = { 0 };
 
     for (i = 0; i < length; i++) {
         dotprod = 0;
@@ -1055,7 +1056,7 @@ static av_always_inline int predictor_update_3930(APEPredictor *p,
                   d3 * p->coeffsA[filter][3];
 
     p->lastA[filter] = decoded + (predictionA >> 9);
-    p->filterA[filter] = p->lastA[filter] + ((p->filterA[filter] * 31) >> 5);
+    p->filterA[filter] = p->lastA[filter] + ((int)(p->filterA[filter] * 31U) >> 5);
 
     sign = APESIGN(decoded);
     p->coeffsA[filter][0] += ((d0 < 0) * 2 - 1) * sign;
@@ -1516,7 +1517,7 @@ static int ape_decode_frame(AVCodecContext *avctx, void *data,
     av_fast_malloc(&s->decoded_buffer, &s->decoded_size, decoded_buffer_size);
     if (!s->decoded_buffer)
         return AVERROR(ENOMEM);
-    memset(s->decoded_buffer, 0, s->decoded_size);
+    memset(s->decoded_buffer, 0, decoded_buffer_size);
     s->decoded[0] = s->decoded_buffer;
     s->decoded[1] = s->decoded_buffer + FFALIGN(blockstodecode, 8);
 

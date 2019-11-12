@@ -33,6 +33,7 @@
 #define FF_BUFQUEUE_SIZE 129
 #include "bufferqueue.h"
 
+#include "atadenoise.h"
 #include "formats.h"
 #include "internal.h"
 #include "video.h"
@@ -44,6 +45,7 @@ typedef struct ATADenoiseContext {
 
     float fthra[4], fthrb[4];
     int thra[4], thrb[4];
+    int algorithm;
 
     int planes;
     int nb_planes;
@@ -57,14 +59,13 @@ typedef struct ATADenoiseContext {
     int available;
 
     int (*filter_slice)(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs);
-    void (*filter_row)(const uint8_t *src, uint8_t *dst,
-                       const uint8_t *srcf[SIZE],
-                       int w, int mid, int size,
-                       int thra, int thrb);
+
+    ATADenoiseDSPContext dsp;
 } ATADenoiseContext;
 
 #define OFFSET(x) offsetof(ATADenoiseContext, x)
-#define FLAGS AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_FILTERING_PARAM
+#define FLAGS AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_RUNTIME_PARAM
+#define VF AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_FILTERING_PARAM
 
 static const AVOption atadenoise_options[] = {
     { "0a", "set threshold A for 1st plane", OFFSET(fthra[0]), AV_OPT_TYPE_FLOAT, {.dbl=0.02}, 0, 0.3, FLAGS },
@@ -73,8 +74,11 @@ static const AVOption atadenoise_options[] = {
     { "1b", "set threshold B for 2nd plane", OFFSET(fthrb[1]), AV_OPT_TYPE_FLOAT, {.dbl=0.04}, 0, 5.0, FLAGS },
     { "2a", "set threshold A for 3rd plane", OFFSET(fthra[2]), AV_OPT_TYPE_FLOAT, {.dbl=0.02}, 0, 0.3, FLAGS },
     { "2b", "set threshold B for 3rd plane", OFFSET(fthrb[2]), AV_OPT_TYPE_FLOAT, {.dbl=0.04}, 0, 5.0, FLAGS },
-    { "s",  "set how many frames to use",    OFFSET(size),     AV_OPT_TYPE_INT,   {.i64=9},   5, SIZE, FLAGS },
+    { "s",  "set how many frames to use",    OFFSET(size),     AV_OPT_TYPE_INT,   {.i64=9},   5, SIZE, VF    },
     { "p",  "set what planes to filter",     OFFSET(planes),   AV_OPT_TYPE_FLAGS, {.i64=7},    0, 15,  FLAGS },
+    { "a",  "set variant of algorithm",      OFFSET(algorithm),AV_OPT_TYPE_INT,   {.i64=PARALLEL},  0, NB_ATAA-1, FLAGS, "a" },
+    { "p",  "parallel",                      0,                AV_OPT_TYPE_CONST, {.i64=PARALLEL},  0, 0,         FLAGS, "a" },
+    { "s",  "serial",                        0,                AV_OPT_TYPE_CONST, {.i64=SERIAL},    0, 0,         FLAGS, "a" },
     { NULL }
 };
 
@@ -176,6 +180,55 @@ static void filter_row##name(const uint8_t *ssrc, uint8_t *ddst,            \
 FILTER_ROW(uint8_t, 8)
 FILTER_ROW(uint16_t, 16)
 
+#define FILTER_ROW_SERIAL(type, name)                                       \
+static void filter_row##name##_serial(const uint8_t *ssrc, uint8_t *ddst,   \
+                                      const uint8_t *ssrcf[SIZE],           \
+                                      int w, int mid, int size,             \
+                                      int thra, int thrb)                   \
+{                                                                           \
+    const type *src = (const type *)ssrc;                                   \
+    const type **srcf = (const type **)ssrcf;                               \
+    type *dst = (type *)ddst;                                               \
+                                                                            \
+    for (int x = 0; x < w; x++) {                                           \
+       const int srcx = src[x];                                             \
+       unsigned lsumdiff = 0, rsumdiff = 0;                                 \
+       unsigned ldiff, rdiff;                                               \
+       unsigned sum = srcx;                                                 \
+       int l = 0, r = 0;                                                    \
+       int srcjx, srcix;                                                    \
+                                                                            \
+       for (int j = mid - 1; j >= 0; j--) {                                 \
+           srcjx = srcf[j][x];                                              \
+                                                                            \
+           ldiff = FFABS(srcx - srcjx);                                     \
+           lsumdiff += ldiff;                                               \
+           if (ldiff > thra ||                                              \
+               lsumdiff > thrb)                                             \
+               break;                                                       \
+           l++;                                                             \
+           sum += srcjx;                                                    \
+       }                                                                    \
+                                                                            \
+       for (int i = mid + 1; i < size; i++) {                               \
+           srcix = srcf[i][x];                                              \
+                                                                            \
+           rdiff = FFABS(srcx - srcix);                                     \
+           rsumdiff += rdiff;                                               \
+           if (rdiff > thra ||                                              \
+               rsumdiff > thrb)                                             \
+               break;                                                       \
+           r++;                                                             \
+           sum += srcix;                                                    \
+       }                                                                    \
+                                                                            \
+       dst[x] = (sum + ((r + l + 1) >> 1)) / (r + l + 1);                   \
+   }                                                                        \
+}
+
+FILTER_ROW_SERIAL(uint8_t, 8)
+FILTER_ROW_SERIAL(uint16_t, 16)
+
 static int filter_slice(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
 {
     ATADenoiseContext *s = ctx->priv;
@@ -209,7 +262,7 @@ static int filter_slice(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
             srcf[i] = data[i] + slice_start * linesize[i];
 
         for (y = slice_start; y < slice_end; y++) {
-            s->filter_row(src, dst, srcf, w, mid, size, thra, thrb);
+            s->dsp.filter_row(src, dst, srcf, w, mid, size, thra, thrb);
 
             dst += out->linesize[p];
             src += in->linesize[p];
@@ -239,9 +292,9 @@ static int config_input(AVFilterLink *inlink)
     depth = desc->comp[0].depth;
     s->filter_slice = filter_slice;
     if (depth == 8)
-        s->filter_row = filter_row8;
+        s->dsp.filter_row = s->algorithm == PARALLEL ? filter_row8 : filter_row8_serial;
     else
-        s->filter_row = filter_row16;
+        s->dsp.filter_row = s->algorithm == PARALLEL ? filter_row16 : filter_row16_serial;
 
     s->thra[0] = s->fthra[0] * (1 << depth) - 1;
     s->thra[1] = s->fthra[1] * (1 << depth) - 1;
@@ -249,6 +302,9 @@ static int config_input(AVFilterLink *inlink)
     s->thrb[0] = s->fthrb[0] * (1 << depth) - 1;
     s->thrb[1] = s->fthrb[1] * (1 << depth) - 1;
     s->thrb[2] = s->fthrb[2] * (1 << depth) - 1;
+
+    if (ARCH_X86)
+        ff_atadenoise_init_x86(&s->dsp, depth, s->algorithm);
 
     return 0;
 }
@@ -349,6 +405,21 @@ static av_cold void uninit(AVFilterContext *ctx)
     ff_bufqueue_discard_all(&s->q);
 }
 
+static int process_command(AVFilterContext *ctx,
+                           const char *cmd,
+                           const char *arg,
+                           char *res,
+                           int res_len,
+                           int flags)
+{
+    int ret = ff_filter_process_command(ctx, cmd, arg, res, res_len, flags);
+
+    if (ret < 0)
+        return ret;
+
+    return config_input(ctx->inputs[0]);
+}
+
 static const AVFilterPad inputs[] = {
     {
         .name         = "default",
@@ -379,4 +450,5 @@ AVFilter ff_vf_atadenoise = {
     .inputs        = inputs,
     .outputs       = outputs,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL | AVFILTER_FLAG_SLICE_THREADS,
+    .process_command = process_command,
 };

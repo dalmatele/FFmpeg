@@ -138,10 +138,14 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     switch (c->id) {
         // Allows a small input to generate gigantic output
     case AV_CODEC_ID_BINKVIDEO: maxpixels /= 32; break;
+    case AV_CODEC_ID_CFHD:      maxpixels /= 128; break;
     case AV_CODEC_ID_DIRAC:     maxpixels /= 8192; break;
+    case AV_CODEC_ID_DXV:       maxpixels /= 32;  break;
+    case AV_CODEC_ID_FFWAVESYNTH: maxsamples /= 16384; break;
     case AV_CODEC_ID_MSRLE:     maxpixels /= 16;  break;
     case AV_CODEC_ID_QTRLE:     maxpixels /= 16;  break;
     case AV_CODEC_ID_SANM:      maxpixels /= 16;  break;
+    case AV_CODEC_ID_G2M:       maxpixels /= 64;  break;
     case AV_CODEC_ID_GIF:       maxpixels /= 16;  break;
         // Performs slow frame rescaling in C
     case AV_CODEC_ID_GDV:       maxpixels /= 512; break;
@@ -152,7 +156,11 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     case AV_CODEC_ID_LSCR:        maxpixels /= 16; break;
     case AV_CODEC_ID_MOTIONPIXELS:maxpixels /= 256; break;
     case AV_CODEC_ID_MSS2:        maxpixels /= 16384; break;
+    case AV_CODEC_ID_MSZH:        maxpixels /= 128; break;
+    case AV_CODEC_ID_SCPR:        maxpixels /= 32;    break;
+    case AV_CODEC_ID_SMACKVIDEO:  maxpixels /= 64; break;
     case AV_CODEC_ID_SNOW:        maxpixels /= 128; break;
+    case AV_CODEC_ID_TGV:         maxpixels /= 32;    break;
     case AV_CODEC_ID_TRUEMOTION2: maxpixels /= 1024; break;
     case AV_CODEC_ID_VP7:         maxpixels /= 256;  break;
     }
