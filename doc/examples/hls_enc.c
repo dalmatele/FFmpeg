@@ -13,7 +13,7 @@ static void logging(const char *fmt, ...);
 static int write_playlist();
 static int write_chunk(AVFormatContext *avfc, AVPacket *pkt);
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) {    
     AVFormatContext *input_format_context = NULL, *output_format_context = NULL;
     AVPacket in_packet;
     AVPacket *out_packet;
@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
         ret = AVERROR_UNKNOWN;
         goto end;
     }
+    
     ret = av_opt_set(output_codec_context, "segment_filename", "%d.m4s", 0);
     logging("80 %s\n", av_err2str(ret));
     av_opt_set(output_codec_context, "segment_type", "1", AV_OPT_TYPE_INT);

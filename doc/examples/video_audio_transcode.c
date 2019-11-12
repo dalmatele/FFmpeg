@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
     int             ret;
     
     AVPacket        in_packet;
+    int             h264_mp4toannex = 0;
         
     
     if (argc < 3) {
@@ -98,6 +99,7 @@ int main(int argc, char** argv) {
         logging("Can not find input stream info.");
         goto end;
     }
+    
     ret = avformat_alloc_output_context2(&o_avfctx, NULL, NULL, out_filename);
     if(ret < 0){
         logging("Can not allocate output format context %s", av_err2str(ret));
@@ -165,7 +167,7 @@ int main(int argc, char** argv) {
                 goto end;
             }                        
             oa_avctx->channel_layout = in_codecpar->channel_layout;
-            oa_avctx->channels = av_get_channel_layout_nb_channels(oa_avctx->channels);
+            oa_avctx->channels = av_get_channel_layout_nb_channels(oa_avctx->channel_layout);
             oa_avctx->sample_rate    = ia_avctx->sample_rate;
             oa_avctx->sample_fmt     = oa_avc->sample_fmts[0];                   
 //            oa_avctx->time_base = (AVRational){1, 24};
@@ -213,11 +215,12 @@ int main(int argc, char** argv) {
                 logging("Can not allocate output video context");
                 goto end;
             }
+            
             ov_avctx->bit_rate = in_codecpar->bit_rate;
             ov_avctx->width = in_codecpar->width;
             ov_avctx->height = in_codecpar->height;            
             ov_avctx->time_base = (AVRational){1, 24};       
-            ov_avctx->gop_size = 10;
+            ov_avctx->gop_size = 60;
             ov_avctx->max_b_frames = 1;
             ov_avctx->pix_fmt = AV_PIX_FMT_YUV420P;
             ret = av_opt_set(ov_avctx->priv_data, "preset", "slow", 0); 
@@ -232,6 +235,7 @@ int main(int argc, char** argv) {
                 logging("Can not create param for output video");
                 goto end;
             }
+            
         }
     }
     av_dump_format(i_avfctx, 0, in_filename, 0);
@@ -256,6 +260,7 @@ int main(int argc, char** argv) {
     // https://ffmpeg.org/doxygen/trunk/group__lavf__encoding.html#ga18b7b10bb5b94c4842de18166bc677cb      
     //this option can be found in this link https://ffmpeg.org/ffmpeg-formats.html#Options-5
     ret = av_opt_set(o_avfctx->priv_data, "hls_segment_type", "fmp4", 0);            
+    ret = av_opt_set(o_avfctx->priv_data, "hls_time", "8", 0); 
     
     ret = avformat_write_header(o_avfctx, NULL);
     if(ret < 0){

@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
          logging("\tCodec %s ID %d bit_rate %lld", pLocalCodec->name, pLocalCodec->id, pCodecParameters->bit_rate);
     }
     AVCodecContext *pCodecContext = avcodec_alloc_context3(pCodec);
+    
     if(!pCodecContext){
         logging("failed to allocated memory for AVCodecContext");
         return -1;

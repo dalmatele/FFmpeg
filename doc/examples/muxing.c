@@ -141,7 +141,7 @@ static void add_stream(OutputStream *ost, AVFormatContext *oc,
             }
         }
         c->channels        = av_get_channel_layout_nb_channels(c->channel_layout);
-        ost->st->time_base = (AVRational){ 1, c->sample_rate };
+        ost->st->time_base = (AVRational){ 1, c->sample_rate };        
         break;
 
     case AVMEDIA_TYPE_VIDEO:
